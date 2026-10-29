@@ -1,0 +1,57 @@
+name: Pubblica app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "strumenti/catalogo.py"
+      - ".github/workflows/pubblica-app.yml"
+  workflow_dispatch:
+  schedule:
+    # ogni lunedi alle 04:23 UTC: catalogo aggiornato da TCGdex
+    - cron: "23 4 * * 1"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Catalogo da TCGdex
+        run: python strumenti/catalogo.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Compila l'app
+        working-directory: app
+        run: |
+          npm ci
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

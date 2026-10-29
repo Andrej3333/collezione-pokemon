@@ -4,9 +4,12 @@ App personale per gestire una collezione di carte Pokémon: collezioni, wantlist
 
 ## Stato
 
-Tappa 0, preparazione: verifica delle fonti dati.
+Tappa 1: base e catalogo. Prima versione web su GitHub Pages: https://andrej3333.github.io/collezione-pokemon/
 
-- `strumenti/verifica_fonti.py`: controlla TCGdex, i file di Cardmarket, pokemontcg.io e i cambi BCE.
-- `.github/workflows/verifica-fonti.yml`: esegue la verifica sui server di GitHub, ogni giorno e a ogni modifica dello script.
-- `verifiche/resoconto.md`: l'ultimo resoconto.
-- `verifiche/esecuzioni.md`: lo storico delle esecuzioni, per vedere se il lavoro programmato parte davvero.
+## Struttura
+
+- `app/`: l'app (React e TypeScript). Si pubblica da sola a ogni modifica e ogni lunedi.
+- `strumenti/catalogo.py`: genera il catalogo leggero delle carte da TCGdex (inglese, italiano, giapponese).
+- `supabase/migrations/`: il database. Le migrazioni si applicano da sole con il segreto `SUPABASE_DB_URL`.
+- `strumenti/verifica_fonti.py` e `verifiche/`: verifica giornaliera delle fonti dati.
+- `docs/piano.md`: piano e decisioni.
