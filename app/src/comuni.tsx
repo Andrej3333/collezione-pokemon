@@ -31,7 +31,7 @@ export function Menu() {
       <div>
         {VOCI.map((v) => (
           <NavLink key={v.to} to={v.to} end={v.to === '/'}
-            className={({ isActive }) => (isActive || (v.to === '/' && /^#\/(carte|carta|collezione|aggiungi|nuova)/.test(location.hash)) ? 'attivo' : '')}>
+            className={({ isActive }) => (isActive || (v.to === '/' && /^#\/(carte|carta|collezione|aggiungi|nuova)/.test(location.hash)) || (v.to === '/wantlist' && /^#\/desiderio/.test(location.hash)) || (v.to === '/viaggio' && /^#\/ordine/.test(location.hash)) ? 'attivo' : '')}>
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">{v.icona}</svg>
             {v.nome}
           </NavLink>
@@ -74,7 +74,7 @@ export function ImmagineCarta(props: {
   }, [props.foto, props.immagine, props.setId, props.numero])
 
   const lista = [...(fotoUrl ? [fotoUrl] : []), ...indirizziImmagine(props)]
-  if (indice >= lista.length) return <div className="img-vuota">immagine non disponibile</div>
+  if (indice >= lista.length) return <div className="img-vuota"><span>immagine non disponibile</span></div>
   return (
     <img className="img-carta" src={lista[indice]} alt={props.alt} loading="lazy"
       onError={() => setIndice((i) => i + 1)} />

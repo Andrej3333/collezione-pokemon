@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Collezione, Copia, Legame, Posizione } from './tipi'
+import type { Collezione, Copia, Desiderio, Legame, Ordine, Posizione } from './tipi'
 
 function controlla<T>(r: { data: T | null; error: { message: string } | null }): T {
   if (r.error) throw new Error(r.error.message)
@@ -89,4 +89,66 @@ export function indirizzoFoto(percorso: string): Promise<string | null> {
     fotoCache.set(percorso, p)
   }
   return p
+}
+
+// --- Wantlist
+export async function elencoWantlist(): Promise<Desiderio[]> {
+  return controlla(await supabase.from('wantlist').select('*').order('created_at', { ascending: false }))
+}
+
+export async function nuoviDesideri(d: Partial<Desiderio>[]): Promise<Desiderio[]> {
+  return controlla(await supabase.from('wantlist').insert(d).select())
+}
+
+export async function aggiornaDesiderio(id: string, d: Partial<Desiderio>): Promise<void> {
+  controlla(await supabase.from('wantlist').update(d).eq('id', id))
+}
+
+export async function eliminaDesiderio(id: string): Promise<void> {
+  controlla(await supabase.from('wantlist').delete().eq('id', id))
+}
+
+// --- Ordini
+export async function elencoOrdini(): Promise<Ordine[]> {
+  return controlla(await supabase.from('ordini').select('*').order('data', { ascending: false }))
+}
+
+export async function nuovoOrdine(o: Partial<Ordine>): Promise<Ordine> {
+  return controlla(await supabase.from('ordini').insert(o).select().single())
+}
+
+export async function aggiornaOrdine(id: string, o: Partial<Ordine>): Promise<void> {
+  controlla(await supabase.from('ordini').update(o).eq('id', id))
+}
+
+export async function eliminaOrdine(id: string): Promise<void> {
+  controlla(await supabase.from('ordini').delete().eq('id', id))
+}
+
+export function speseOrdine(o: Ordine): number {
+  return [o.spedizione, o.commissioni, o.iva, o.dazio, o.altre_spese].reduce((a, b) => a + Number(b || 0), 0)
+}
+
+// Divide le spese dell'ordine sulle carte, in proporzione al prezzo; se nessuna ha un prezzo, in parti uguali.
+export function calcolaQuote(o: Ordine, carte: Copia[]): Map<string, number> {
+  const spese = speseOrdine(o)
+  const tot = carte.reduce((a, c) => a + Number(c.prezzo_pagato || 0), 0)
+  const quote = new Map<string, number>()
+  let assegnato = 0
+  carte.forEach((c, i) => {
+    let q = tot > 0 ? (spese * Number(c.prezzo_pagato || 0)) / tot : spese / carte.length
+    q = Math.round(q * 100) / 100
+    if (i === carte.length - 1) q = Math.round((spese - assegnato) * 100) / 100 // l'ultima prende i centesimi di arrotondamento
+    assegnato += q
+    quote.set(c.id, q)
+  })
+  return quote
+}
+
+export async function salvaQuote(o: Ordine, carte: Copia[]): Promise<void> {
+  const quote = calcolaQuote(o, carte)
+  for (const c of carte) {
+    const q = quote.get(c.id) ?? 0
+    if (Number(c.quota_spese ?? -1) !== q) await aggiornaCopia(c.id, { quota_spese: q })
+  }
 }

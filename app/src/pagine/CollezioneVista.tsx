@@ -3,14 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { copieDi, useArchivio } from '../archivio'
 import { caricaCatalogo, type CartaCatalogo } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, ImmagineCopia, Indietro } from '../comuni'
-import { collega, eliminaCollezione } from '../dati'
+import { collega, eliminaCollezione, nuoviDesideri } from '../dati'
 import { LINGUE } from '../tipi'
 import { GrigliaCopie } from './TutteLeCarte'
 
 export function CollezioneVista() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { copie, collezioni, legami, caricato, ricarica } = useArchivio()
+  const { copie, collezioni, legami, wantlist, caricato, ricarica } = useArchivio()
   const col = collezioni.find((c) => c.id === id)
   const [carteSet, setCarteSet] = useState<CartaCatalogo[] | null>(null)
   const [filtro, setFiltro] = useState<'tutte' | 'possedute' | 'mancanti'>('tutte')
@@ -31,6 +31,18 @@ export function CollezioneVista() {
   if (!caricato) return <main className="pagina"><Attesa /></main>
   if (!col) return <main className="pagina"><Indietro to="/">Collezioni</Indietro><div className="vuoto">Collezione non trovata.</div></main>
   const membri = copieDi(col, possedute, legami)
+  const inWantlist = new Set(wantlist.filter((d) => d.lingua === col.lingua).map((d) => d.carta_id))
+
+  async function aggiungiWantlist(carte: CartaCatalogo[]) {
+    if (!col) return
+    try {
+      await nuoviDesideri(carte.map((c) => ({
+        carta_id: c.id, lingua: col.lingua!, nome: c.nome, set_id: c.setId, set_nome: col.set_nome,
+        numero: c.numero, immagine: c.immagine || null,
+      })))
+      await ricarica()
+    } catch (e) { setErrore((e as Error).message) }
+  }
 
   async function elimina() {
     if (!col || !window.confirm(`Eliminare la collezione "${col.nome}"? Le carte restano nella tua collezione.`)) return
@@ -70,9 +82,14 @@ export function CollezioneVista() {
       <main className="pagina">
         {testata}
         <div className="scheda">
-          <div className="riga tra"><span>{possedutiN} di {carteSet.length}</span><span className="tenue piccolo">{carteSet.length - possedutiN} mancanti</span></div>
+          <div className="riga tra"><span>{possedutiN} di {carteSet.length}</span><span className="tenue piccolo">{carteSet.length - possedutiN} {carteSet.length - possedutiN === 1 ? 'mancante' : 'mancanti'}</span></div>
           <div className="barra"><div style={{ width: `${pct}%` }} /></div>
-          <span className="tenue piccolo">Le mancanti potranno andare in wantlist con un tocco dalla tappa 2.</span>
+          {(() => {
+            const daAggiungere = carteSet.filter((c) => !perNumero.has(c.numero) && !inWantlist.has(c.id))
+            return daAggiungere.length > 0
+              ? <button type="button" className="btn contorno" onClick={() => void aggiungiWantlist(daAggiungere)}>Tutte le mancanti in wantlist ({daAggiungere.length})</button>
+              : <span className="tenue piccolo">Tutte le mancanti sono già in wantlist.</span>
+          })()}
         </div>
         <div className="chips">
           {([['tutte', `Tutte (${carteSet.length})`], ['possedute', `Possedute (${possedutiN})`], ['mancanti', `Mancanti (${carteSet.length - possedutiN})`]] as const).map(([k, t]) => (
@@ -86,7 +103,9 @@ export function CollezioneVista() {
               <>
                 {m ? <ImmagineCopia copia={m} /> : <span className="mancante"><ImmagineCarta immagine={c.immagine} lingua={col.lingua!} setId={c.setId} numero={c.numero} alt={c.nome} /></span>}
                 <span className={`piccolo taglia ${col.lingua === 'ja' ? 'jp' : ''}`} style={{ fontWeight: m ? 600 : 400 }}>{c.numero} · {c.nome}</span>
-                {m ? <span className="piccolo" style={{ color: 'var(--verde)' }}>Posseduta</span> : <span className="piccolo tenue">Mancante</span>}
+                {m ? <span className="piccolo" style={{ color: 'var(--verde)' }}>Posseduta</span>
+                  : inWantlist.has(c.id) ? <span className="piccolo" style={{ color: 'var(--accento)' }}>In wantlist</span>
+                  : <button type="button" className="btn" style={{ minHeight: 40, fontSize: 13, padding: '0 6px' }} onClick={() => void aggiungiWantlist([c])}>+ Wantlist</button>}
               </>
             )
             return m

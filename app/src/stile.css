@@ -80,6 +80,8 @@ h2 { margin: 0; font-size: 17px; font-weight: 600; }
 .img-vuota { width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; background: var(--superficie2); border: 1px dashed var(--bordo2); display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; font-size: 12px; color: var(--tenue); }
 .mancante { opacity: .45; }
 .mosaico .img-vuota { font-size: 0; padding: 0; }
+.img-vuota { container-type: inline-size; }
+@container (max-width: 100px) { .img-vuota > span { display: none; } }
 .lista-scelta { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
 .lista-scelta button { text-align: left; min-height: 44px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--bordo2); background: var(--superficie2); color: var(--testo); cursor: pointer; }
 .lista-scelta button.attivo { border-color: var(--accento); background: var(--blu-f); }

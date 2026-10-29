@@ -5,6 +5,7 @@ import { Attesa, EtichettaStato, ImmagineCopia, Indietro } from '../comuni'
 import { aggiornaCopia, caricaFoto, collega, eliminaCopia, scollega } from '../dati'
 import { CONDIZIONI, LINGUE } from '../tipi'
 import { FormCopia, soloValori } from './FormCopia'
+import { LinkSiti } from './Wantlist'
 
 function indirizzoBulbapedia(nome: string, setNome: string | null, numero: string): string {
   const q = `${nome} (${setNome ?? ''} ${numero})`.replace(/\s+/g, ' ')
@@ -14,7 +15,7 @@ function indirizzoBulbapedia(nome: string, setNome: string | null, numero: strin
 export function Scheda() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { copie, collezioni, legami, posizioni, caricato, ricarica } = useArchivio()
+  const { copie, collezioni, legami, posizioni, ordini, caricato, ricarica } = useArchivio()
   const [modifica, setModifica] = useState(false)
   const [grande, setGrande] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
@@ -31,6 +32,8 @@ export function Scheda() {
   const manuali = collezioni.filter((col) => col.tipo === 'manuale')
   const posizione = posizioni.find((p) => p.id === c.posizione_id)
   const lingua = LINGUE.find((l) => l.id === c.lingua)?.nome
+  const ordine = ordini.find((o) => o.id === c.ordine_id)
+  const euro = (n: number | null) => `€ ${Number(n || 0).toFixed(2).replace('.', ',')}`
 
   async function esegui(f: () => Promise<unknown>) {
     setOccupato(true)
@@ -83,7 +86,7 @@ export function Scheda() {
             <EtichettaStato stato={c.stato} />
             <h1 className={c.lingua === 'ja' ? 'jp' : ''} style={{ fontSize: 26 }}>{c.nome}</h1>
             <span className="tenue" style={{ lineHeight: 1.5 }}>
-              {[c.set_nome || c.set_id, c.numero, c.rarita, lingua].filter(Boolean).join(' · ')}
+              {[c.set_nome || c.set_id, c.numero, c.rarita, lingua, c.variante].filter(Boolean).join(' · ')}
             </span>
           </div>
           {errore && <div className="avviso errore">{errore}</div>}
@@ -121,6 +124,8 @@ export function Scheda() {
           <section className="scheda">
             <h2>Valore della carta</h2>
             <div className="avviso">Prezzi e andamento arrivano con la tappa 3.{c.cardmarket_id ? ` Prodotto Cardmarket già collegato (${c.cardmarket_id}).` : ''}</div>
+            <span style={{ fontWeight: 600, fontSize: 14 }}>Valuta la tua copia: cerca sui siti</span>
+            <LinkSiti c={c} />
           </section>
 
           <section className="scheda">
@@ -131,7 +136,11 @@ export function Scheda() {
               {c.gradata && c.certificato && <div><div className="lbl">Certificato</div>{c.certificato}</div>}
               <div><div className="lbl">Protezione</div>{c.protezione || 'Non indicata'}</div>
               <div><div className="lbl">Posizione</div>{posizione ? `${posizione.nome}${c.pagina ? `, ${c.pagina}` : ''}` : 'Nessuna'}</div>
-              <div><div className="lbl">Pagata</div><span className="mono">{c.prezzo_pagato != null ? `€ ${c.prezzo_pagato.toFixed(2).replace('.', ',')}` : 'Non indicato'}</span></div>
+              <div><div className="lbl">Variante</div>{c.variante || 'Non indicata'}</div>
+              <div><div className="lbl">Pagata</div><span className="mono">{c.prezzo_pagato != null ? euro(c.prezzo_pagato) : 'Non indicato'}</span></div>
+              {c.quota_spese != null && Number(c.quota_spese) > 0 && <div><div className="lbl">Quota spese dell'ordine</div><span className="mono">{euro(c.quota_spese)}</span></div>}
+              {c.quota_spese != null && Number(c.quota_spese) > 0 && <div><div className="lbl">Costo effettivo</div><span className="mono" style={{ fontWeight: 600 }}>{euro(Number(c.prezzo_pagato || 0) + Number(c.quota_spese))}</span></div>}
+              {ordine && <div><div className="lbl">Ordine</div><Link to={`/ordine/${ordine.id}`}>{ordine.sito}, {new Date(ordine.data).toLocaleDateString('it-IT')}</Link></div>}
               <div><div className="lbl">Arrivata il</div>{c.data_arrivo ? new Date(c.data_arrivo).toLocaleDateString('it-IT') : 'Non indicato'}</div>
               {c.illustratore && <div><div className="lbl">Illustratore</div>{c.illustratore}</div>}
             </div>

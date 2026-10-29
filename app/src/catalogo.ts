@@ -87,6 +87,19 @@ export interface Dettaglio {
   setNome: string | null
   cardmarketId: number | null
   immagine: string | null
+  varianti: string[]
+}
+
+// Varianti indicate da TCGdex, piu quelle note che il catalogo non distingue (Shadowless del Set Base).
+function variantiDa(setId: string, v: Record<string, boolean> | undefined): string[] {
+  const out: string[] = []
+  if (v?.firstEdition) out.push('Prima edizione')
+  if (setId === 'base1') out.push('Shadowless')
+  if (v?.normal) out.push(v.firstEdition ? 'Unlimited' : 'Normale')
+  if (v?.holo) out.push('Holo')
+  if (v?.reverse) out.push('Reverse holo')
+  if (v?.wPromo) out.push('Timbro promo')
+  return out
 }
 
 export async function dettaglio(lingua: Lingua, id: string): Promise<Dettaglio> {
@@ -100,9 +113,10 @@ export async function dettaglio(lingua: Lingua, id: string): Promise<Dettaglio> 
       setNome: d.set?.name ?? null,
       cardmarketId: d.pricing?.cardmarket?.idProduct ?? null,
       immagine: d.image ?? null,
+      varianti: variantiDa(setIdDi(id), d.variants),
     }
   } catch {
-    return { rarita: null, illustratore: null, setNome: null, cardmarketId: null, immagine: null }
+    return { rarita: null, illustratore: null, setNome: null, cardmarketId: null, immagine: null, varianti: variantiDa(setIdDi(id), undefined) }
   }
 }
 

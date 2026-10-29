@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { elencoCollezioni, elencoCopie, elencoLegami, elencoPosizioni } from './dati'
-import type { Collezione, Copia, Legame, Posizione } from './tipi'
+import { elencoCollezioni, elencoCopie, elencoLegami, elencoOrdini, elencoPosizioni, elencoWantlist } from './dati'
+import type { Collezione, Copia, Desiderio, Legame, Ordine, Posizione } from './tipi'
 
 interface Archivio {
   copie: Copia[]
   collezioni: Collezione[]
   legami: Legame[]
   posizioni: Posizione[]
+  wantlist: Desiderio[]
+  ordini: Ordine[]
   caricato: boolean
   errore: string | null
   ricarica: () => Promise<void>
@@ -16,15 +18,15 @@ const Ctx = createContext<Archivio | null>(null)
 
 export function ArchivioProvider({ children }: { children: ReactNode }) {
   const [stato, setStato] = useState<Omit<Archivio, 'ricarica'>>({
-    copie: [], collezioni: [], legami: [], posizioni: [], caricato: false, errore: null,
+    copie: [], collezioni: [], legami: [], posizioni: [], wantlist: [], ordini: [], caricato: false, errore: null,
   })
 
   const ricarica = useCallback(async () => {
     try {
-      const [copie, collezioni, legami, posizioni] = await Promise.all([
-        elencoCopie(), elencoCollezioni(), elencoLegami(), elencoPosizioni(),
+      const [copie, collezioni, legami, posizioni, wantlist, ordini] = await Promise.all([
+        elencoCopie(), elencoCollezioni(), elencoLegami(), elencoPosizioni(), elencoWantlist(), elencoOrdini(),
       ])
-      setStato({ copie, collezioni, legami, posizioni, caricato: true, errore: null })
+      setStato({ copie, collezioni, legami, posizioni, wantlist, ordini, caricato: true, errore: null })
     } catch (e) {
       setStato((s) => ({ ...s, caricato: true, errore: (e as Error).message }))
     }

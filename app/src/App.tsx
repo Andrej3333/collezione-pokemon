@@ -12,6 +12,8 @@ import { Impostazioni, InArrivo } from './pagine/Impostazioni'
 import { NuovaCollezione } from './pagine/NuovaCollezione'
 import { Scheda } from './pagine/Scheda'
 import { TutteLeCarte } from './pagine/TutteLeCarte'
+import { DesiderioVista, NuovoDesiderio, Wantlist } from './pagine/Wantlist'
+import { NuovoOrdine, OrdineVista, Viaggio } from './pagine/Ordini'
 
 export function App() {
   const [sessione, setSessione] = useState<Session | null | undefined>(undefined)
@@ -41,8 +43,12 @@ export function App() {
           <Route path="/nuova" element={<NuovaCollezione />} />
           <Route path="/collezione/:id" element={<CollezioneVista />} />
           <Route path="/impostazioni" element={<Impostazioni />} />
-          <Route path="/wantlist" element={<InArrivo titolo="Wantlist" testo="La wantlist arriva con la tappa 2." />} />
-          <Route path="/viaggio" element={<InArrivo titolo="In viaggio" testo="Gli ordini e le carte in viaggio arrivano con la tappa 2. Per ora puoi segnare una carta come in viaggio dalla sua scheda." />} />
+          <Route path="/wantlist" element={<Wantlist />} />
+          <Route path="/wantlist/aggiungi" element={<NuovoDesiderio />} />
+          <Route path="/desiderio/:id" element={<DesiderioVista />} />
+          <Route path="/viaggio" element={<Viaggio />} />
+          <Route path="/ordine/nuovo" element={<NuovoOrdine />} />
+          <Route path="/ordine/:id" element={<OrdineVista />} />
           <Route path="/browser" element={<InArrivo titolo="Browser" testo="Il browser interno arriva con la tappa 4, nelle app per Android e Windows." />} />
           <Route path="*" element={<Collezioni />} />
         </Routes>

@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { useArchivio } from '../archivio'
 import { nuovaPosizione } from '../dati'
 import type { Copia, Stato } from '../tipi'
-import { CONDIZIONI, STATI } from '../tipi'
+import { CONDIZIONI, STATI, VARIANTI } from '../tipi'
 
 export type ValoriCopia = Pick<Copia,
-  'stato' | 'condizione' | 'gradata' | 'ente' | 'voto' | 'certificato' | 'protezione' |
+  'stato' | 'condizione' | 'variante' | 'gradata' | 'ente' | 'voto' | 'certificato' | 'protezione' |
   'posizione_id' | 'pagina' | 'prezzo_pagato' | 'data_arrivo' | 'note'>
 
 export const VALORI_INIZIALI: ValoriCopia = {
-  stato: 'collezione', condizione: 'NM', gradata: false, ente: null, voto: null, certificato: null,
+  stato: 'collezione', condizione: 'NM', variante: null, gradata: false, ente: null, voto: null, certificato: null,
   protezione: 'Doppia bustina e toploader', posizione_id: null, pagina: null, prezzo_pagato: null,
   data_arrivo: new Date().toISOString().slice(0, 10), note: null,
 }
@@ -23,6 +23,7 @@ const vuotoNull = (s: string) => (s.trim() === '' ? null : s)
 
 export function FormCopia(props: {
   iniziali: ValoriCopia
+  variantiSuggerite?: string[]
   collezioniIniziali: string[]
   etichettaSalva: string
   onSalva: (v: ValoriCopia, collezioni: string[]) => Promise<void>
@@ -68,6 +69,8 @@ export function FormCopia(props: {
           </select>
         </label>
       </div>
+
+      <CampoVariante valore={v.variante} suggerite={props.variantiSuggerite ?? []} onCambia={(x) => set('variante', x)} />
 
       <label className="spunta"><input type="checkbox" checked={v.gradata} onChange={(e) => set('gradata', e.target.checked)} />Gradata</label>
       {v.gradata && (
@@ -124,5 +127,25 @@ export function FormCopia(props: {
       {errore && <div className="avviso errore">{errore}</div>}
       <button className="btn primario" type="submit" disabled={invio}>{invio ? 'Salvataggio…' : props.etichettaSalva}</button>
     </form>
+  )
+}
+
+// Variante: le varianti suggerite per la carta come pulsanti, piu un campo libero per i casi particolari.
+export function CampoVariante({ valore, suggerite, onCambia }: { valore: string | null; suggerite: string[]; onCambia: (v: string | null) => void }) {
+  return (
+    <div className="colonna" style={{ gap: 6 }}>
+      <span style={{ fontSize: 14, color: 'var(--testo2)' }}>Variante</span>
+      {suggerite.length > 0 && (
+        <div className="chips" role="group" aria-label="Varianti della carta">
+          {suggerite.map((x) => (
+            <button key={x} type="button" className={`chip ${valore === x ? 'attivo' : ''}`} aria-pressed={valore === x} onClick={() => onCambia(valore === x ? null : x)}>{x}</button>
+          ))}
+        </div>
+      )}
+      <input className="campo-libero" list="varianti" aria-label="Variante, testo libero" value={valore ?? ''}
+        onChange={(e) => onCambia(e.target.value.trim() === '' ? null : e.target.value)}
+        placeholder="Altra variante, es. Shadowless, timbro, errore di stampa" />
+      <datalist id="varianti">{VARIANTI.map((x) => <option key={x} value={x} />)}</datalist>
+    </div>
   )
 }

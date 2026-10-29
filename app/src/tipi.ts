@@ -50,6 +50,59 @@ export interface Copia {
   data_arrivo: string | null
   foto_url: string | null
   note: string | null
+  variante: string | null
+  ordine_id: string | null
+  quota_spese: number | null
+  created_at: string
+}
+
+export const VARIANTI = [
+  'Normale', 'Unlimited', 'Prima edizione', 'Shadowless', 'Holo', 'Reverse holo',
+  'Timbro promo', 'Timbro staff', 'Timbro prerelease',
+]
+
+export interface Desiderio {
+  id: string
+  carta_id: string
+  lingua: Lingua
+  nome: string
+  set_id: string
+  set_nome: string | null
+  numero: string
+  immagine: string | null
+  cardmarket_id: number | null
+  variante: string | null
+  condizione_min: string | null
+  gradata: '' | 'si' | 'no'
+  prezzo_max: number | null
+  ordine_id: string | null
+  note: string | null
+  created_at: string
+}
+
+export type TipoOrdine = 'europa' | 'giappone'
+
+export const TAPPE: Record<TipoOrdine, string[]> = {
+  europa: ['Pagato', 'Spedito', 'In consegna', 'Consegnato', 'Ricevuto'],
+  giappone: ['Acquistata', 'Al magazzino del proxy', 'Spedizione internazionale', 'Dogana', 'Ricevuta'],
+}
+
+export interface Ordine {
+  id: string
+  tipo: TipoOrdine
+  sito: string
+  venditore: string | null
+  data: string
+  tracciamento: string | null
+  tappa: number
+  spedizione: number
+  commissioni: number
+  iva: number
+  dazio: number
+  altre_spese: number
+  arrivato: boolean
+  data_arrivo: string | null
+  note: string | null
   created_at: string
 }
 
