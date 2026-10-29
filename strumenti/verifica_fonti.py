@@ -6,6 +6,9 @@ Gira sui server di GitHub (GitHub Actions). Controlla:
   2. Cardmarket: file pubblici di prodotti e prezzi.
   3. pokemontcg.io: prezzi TCGplayer e Cardmarket.
   4. Banca centrale europea: cambi del giorno (yen e dollaro).
+  5. Carte giapponesi: immagini per set su TCGdex e prodotti Cardmarket collegati.
+  6. TCGCSV: dati TCGplayer scaricabili, anche per le carte giapponesi.
+  7. Fonti di immagini: Bulbapedia, database ufficiale giapponese, Limitless, TCG Collector.
 
 Scrive il resoconto in verifiche/resoconto.md e aggiunge una riga a
 verifiche/esecuzioni.md, cosi si vede anche se i lavori programmati partono.
@@ -16,7 +19,10 @@ import datetime as dt
 import gzip
 import json
 import os
+import re
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 UA = "collezione-pokemon-verifica/1.0 (uso personale)"
@@ -179,6 +185,171 @@ def check_ecb():
     log()
 
 
+# 5. Carte giapponesi: copertura immagini per set e prodotti Cardmarket ------
+
+def pause():
+    time.sleep(1.5)
+
+
+def check_japanese():
+    log("## 5. Carte giapponesi: immagini e prodotti Cardmarket")
+    log()
+    base = "https://api.tcgdex.net/v2/ja"
+    st, cards, err = fetch_json(base + "/cards", timeout=120)
+    if err:
+        log("- elenco carte giapponesi non raggiungibile (%s)" % err)
+        log()
+        return None
+    by_set = {}
+    for c in cards:
+        sid = c.get("id", "").rsplit("-", 1)[0]
+        tot, img = by_set.get(sid, (0, 0))
+        by_set[sid] = (tot + 1, img + (1 if c.get("image") else 0))
+    full = [s for s, (t, i) in by_set.items() if i == t]
+    none = [s for s, (t, i) in by_set.items() if i == 0]
+    part = [s for s, (t, i) in by_set.items() if 0 < i < t]
+    log("- set con tutte le immagini: %d, set senza immagini: %d, set parziali: %d" % (len(full), len(none), len(part)))
+    log("  - con tutte: %s" % ", ".join(sorted(full)[:60]))
+    log("  - senza: %s" % ", ".join(sorted(none)[:80]))
+    log("  - parziali: %s" % ", ".join("%s (%d/%d)" % (s, by_set[s][1], by_set[s][0]) for s in sorted(part)[:40]))
+
+    # alcune carte giapponesi: prezzo e prodotto Cardmarket
+    samples = []
+    for sid in ["SV2a", "SV4a", "M2a", "S12a", "SM12a"]:
+        ids = [c["id"] for c in cards if c.get("id", "").startswith(sid + "-")]
+        if ids:
+            samples.append(ids[-1])
+    found = []
+    for cid in samples:
+        st, card, err = fetch_json("%s/cards/%s" % (base, cid))
+        if err:
+            log("- carta %s: non raggiungibile (%s)" % (cid, err))
+            continue
+        cm = (card.get("pricing") or {}).get("cardmarket") or {}
+        log("- carta giapponese **%s** (%s): immagine %s, prodotto Cardmarket %s, tendenza %s" % (
+            cid, card.get("name"), "si" if card.get("image") else "no", cm.get("idProduct"), cm.get("trend")))
+        if cm.get("idProduct"):
+            found.append((cid, cm.get("idProduct")))
+    log()
+    return found
+
+
+def check_cardmarket_products(found):
+    """Controlla nei file Cardmarket i prodotti collegati alle carte giapponesi."""
+    if not found:
+        return
+    log("### Prodotti Cardmarket delle carte giapponesi")
+    log()
+    st, prods, err = fetch_json("https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json", timeout=180)
+    if err:
+        log("- elenco prodotti non raggiungibile (%s)" % err)
+        return
+    index = {p["idProduct"]: p for p in prods.get("products", [])}
+    for cid, pid in found:
+        p = index.get(pid)
+        log("- %s -> prodotto %s: %s" % (cid, pid, json.dumps(p, ensure_ascii=False) if p else "non presente nell'elenco"))
+    # confronto con la versione inglese di 151: stesso prodotto o prodotto separato?
+    st, en, err = fetch_json("https://api.tcgdex.net/v2/en/cards/sv03.5-199")
+    if not err:
+        cm = (en.get("pricing") or {}).get("cardmarket") or {}
+        p = index.get(cm.get("idProduct"))
+        log("- confronto: inglese sv03.5-199 (%s) -> prodotto %s: %s" % (
+            en.get("name"), cm.get("idProduct"), json.dumps(p, ensure_ascii=False) if p else "non trovato"))
+    log()
+
+
+# 6. Altre fonti di prezzo: TCGCSV --------------------------------------------
+
+def check_tcgcsv():
+    log("## 6. TCGCSV (dati TCGplayer scaricabili)")
+    log()
+    st, data, err = fetch("https://tcgcsv.com/last-updated.txt")
+    log("- ultimo aggiornamento: %s" % (data.decode("utf-8", "replace").strip()[:60] if not err else "non raggiungibile (%s)" % err))
+    pause()
+    st, cats, err = fetch_json("https://tcgcsv.com/tcgplayer/categories")
+    if err:
+        log("- categorie non raggiungibili (stato %s, %s)" % (st, err))
+        log()
+        return
+    rows = cats.get("results", cats) if isinstance(cats, dict) else cats
+    poke = [c for c in rows if "pok" in (c.get("name", "") + c.get("displayName", "")).lower()]
+    for c in poke:
+        log("- categoria %s: %s" % (c.get("categoryId"), c.get("displayName") or c.get("name")))
+    for c in poke:
+        if "japan" in (c.get("name", "") + c.get("displayName", "")).lower():
+            pause()
+            st, groups, err = fetch_json("https://tcgcsv.com/tcgplayer/%s/groups" % c["categoryId"])
+            if err:
+                log("  - gruppi non raggiungibili (%s)" % err)
+                continue
+            g = groups.get("results", groups) if isinstance(groups, dict) else groups
+            log("  - set giapponesi su TCGplayer: %d, ultimi: %s" % (len(g), "; ".join(x.get("name", "") for x in g[-8:])))
+            if g:
+                pause()
+                gid = g[-1]["groupId"]
+                st, prices, err = fetch_json("https://tcgcsv.com/tcgplayer/%s/%s/prices" % (c["categoryId"], gid))
+                if not err:
+                    pr = prices.get("results", prices) if isinstance(prices, dict) else prices
+                    log("  - prezzi del set %s: %d righe, esempio `%s`" % (gid, len(pr), json.dumps(pr[0], ensure_ascii=False)[:300] if pr else ""))
+    log()
+
+
+# 7. Fonti di immagini -------------------------------------------------------
+
+def check_images():
+    log("## 7. Fonti di immagini per le carte giapponesi")
+    log()
+    # Bulbagarden Archives (immagini di Bulbapedia), API MediaWiki pubblica
+    for q in ["Vending", "Expansion Sheet", "Mew ex 151"]:
+        url = ("https://archives.bulbagarden.net/w/api.php?action=query&list=search&srnamespace=6&srlimit=8&format=json&srsearch="
+               + urllib.parse.quote(q))
+        st, obj, err = fetch_json(url)
+        if err:
+            log("- Bulbagarden Archives, ricerca \"%s\": non raggiungibile (stato %s, %s)" % (q, st, err))
+        else:
+            hits = obj.get("query", {}).get("search", [])
+            log("- Bulbagarden Archives, ricerca \"%s\": %d risultati, es. %s" % (
+                q, obj.get("query", {}).get("searchinfo", {}).get("totalhits", len(hits)), "; ".join(h["title"] for h in hits[:5])))
+        pause()
+    url = "https://bulbapedia.bulbagarden.net/w/api.php?action=query&list=search&srlimit=8&format=json&srsearch=" + urllib.parse.quote("Vending series")
+    st, obj, err = fetch_json(url)
+    if err:
+        log("- Bulbapedia, ricerca \"Vending series\": non raggiungibile (stato %s, %s)" % (st, err))
+    else:
+        log("- Bulbapedia, ricerca \"Vending series\": %s" % "; ".join(h["title"] for h in obj.get("query", {}).get("search", [])[:6]))
+    pause()
+
+    # Database ufficiale giapponese
+    q = urllib.parse.quote("ミュウex")
+    st, data, err = fetch("https://www.pokemon-card.com/card-search/resultAPI.php?keyword=%s&regulation_sidebar_form=all&page=1" % q)
+    if err:
+        log("- database ufficiale giapponese: non raggiungibile (stato %s, %s)" % (st, err))
+    else:
+        text = data.decode("utf-8", "replace")
+        log("- database ufficiale giapponese: risposta %s, %s; inizio: `%s`" % (st, size(len(data)), text[:250].replace("`", "'")))
+    pause()
+
+    # Limitless
+    st, data, err = fetch("https://limitlesstcg.com/cards/jp/SV2a/201")
+    if err:
+        log("- Limitless, carta SV2a 201: non raggiungibile (stato %s, %s)" % (st, err))
+    else:
+        text = data.decode("utf-8", "replace")
+        imgs = [m for m in re.findall(r'src="([^"]+\.(?:png|jpg|webp))"', text) if "SV2a" in m or "sv2a" in m.lower()]
+        log("- Limitless, carta SV2a 201: risposta %s, immagini trovate: %s" % (st, "; ".join(imgs[:3]) or "nessuna"))
+    pause()
+
+    # TCG Collector
+    st, data, err = fetch("https://www.tcgcollector.com/expansions/jp")
+    if err:
+        log("- TCG Collector, espansioni giapponesi: non raggiungibile (stato %s, %s)" % (st, err))
+    else:
+        text = data.decode("utf-8", "replace")
+        n = len(re.findall(r"(?i)vending", text))
+        log("- TCG Collector, espansioni giapponesi: risposta %s, %s, citazioni di \"Vending\": %d" % (st, size(len(data)), n))
+    log()
+
+
 def main():
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     trigger = os.environ.get("GITHUB_EVENT_NAME", "manuale")
@@ -190,6 +361,12 @@ def main():
     check_cardmarket()
     check_pokemontcg()
     check_ecb()
+    for step in (lambda: check_cardmarket_products(check_japanese()), check_tcgcsv, check_images):
+        try:
+            step()
+        except Exception as e:  # una fonte che fallisce non deve fermare le altre
+            log("- errore inatteso: %r" % e)
+            log()
 
     os.makedirs(OUT_DIR, exist_ok=True)
     with open(os.path.join(OUT_DIR, "resoconto.md"), "w", encoding="utf-8") as f:
