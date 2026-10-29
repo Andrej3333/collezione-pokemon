@@ -1,23 +1,25 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useArchivio } from '../archivio'
 import { dettaglio, type Catalogo, type CartaCatalogo } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, ImmagineCopia, Indietro } from '../comuni'
 import {
   aggiornaCopia, aggiornaDesiderio, aggiornaOrdine, calcolaQuote, eliminaCopia, eliminaDesiderio,
-  eliminaOrdine, nuovaCopia, nuovoOrdine, salvaQuote, speseOrdine,
+  eliminaOrdine, nuovaCopia, nuovoOrdine, salvaQuote, speseOrdine, valoreMerce,
 } from '../dati'
-import type { Copia, Desiderio, Lingua, Ordine, TipoOrdine } from '../tipi'
+import { costiEffettivi, stimaImportazione } from '../importazione'
+import type { CategoriaVoce, Copia, Desiderio, Lingua, Ordine, TipoOrdine } from '../tipi'
 import { CONDIZIONI, TAPPE } from '../tipi'
 import { CercaCarta } from './CercaCarta'
 
 const euro = (n: number | null | undefined) => `€ ${Number(n || 0).toFixed(2).replace('.', ',')}`
+const CORRIERI = ['Japan Post EMS', 'Japan Post aerea', 'Japan Post SAL', 'DHL', 'FedEx', 'UPS']
 const SITI = ['Cardmarket', 'eBay', 'Mercari', 'Yahoo Aste', 'SNKRDUNK', 'Card Rush', 'Toreca Camp', 'Suruga-ya', 'Fiera', 'Negozio']
 
 // --- Elenco: In viaggio ---------------------------------------------------------
 
 export function Viaggio() {
-  const { ordini, copie, caricato } = useArchivio()
+  const { ordini, copie, voci, caricato } = useArchivio()
   const [storico, setStorico] = useState(false)
   if (!caricato) return <main className="pagina"><Attesa /></main>
   const aperti = ordini.filter((o) => !o.arrivato)
@@ -26,7 +28,7 @@ export function Viaggio() {
   const scheda = (o: Ordine) => {
     const carte = copie.filter((c) => c.ordine_id === o.id)
     const tappe = TAPPE[o.tipo]
-    const tot = carte.reduce((a, c) => a + Number(c.prezzo_pagato || 0), 0) + speseOrdine(o)
+    const tot = valoreMerce(carte) + speseOrdine(o, carte, voci)
     return (
       <Link key={o.id} to={`/ordine/${o.id}`} className="scheda" style={{ color: 'var(--testo)' }}>
         <div className="riga tra" style={{ alignItems: 'flex-start' }}>
@@ -74,25 +76,91 @@ export function Viaggio() {
 
 // --- Costi dell'ordine ----------------------------------------------------------
 
-type Costi = Pick<Ordine, 'spedizione' | 'commissioni' | 'iva' | 'dazio' | 'altre_spese'>
-const VOCI_COSTO: [keyof Costi, string, TipoOrdine | null][] = [
-  ['spedizione', 'Spedizione', null],
-  ['commissioni', 'Commissioni (sito, proxy, pagamento)', null],
-  ['iva', 'IVA all\'importazione', 'giappone'],
-  ['dazio', 'Dazio', 'giappone'],
-  ['altre_spese', 'Altre spese', null],
-]
+type Costi = Pick<Ordine, 'spedizione' | 'commissioni' | 'iva' | 'dazio' | 'diritti' | 'altre_spese' | 'corriere' | 'iva_al_sito'>
+const COSTI_VUOTI: Costi = { spedizione: 0, commissioni: 0, iva: null, dazio: null, diritti: null, altre_spese: 0, corriere: null, iva_al_sito: false }
+const TASSE: [CategoriaVoce, string][] = [['dazio', 'Dazio'], ['diritti', 'Diritti e sdoganamento'], ['iva', 'IVA all\'importazione']]
 
-function CampiCosti({ tipo, costi, onCambia }: { tipo: TipoOrdine; costi: Costi; onCambia: (c: Costi) => void }) {
+const numero = (v: string) => (v === '' ? 0 : Number(v))
+
+// Campi delle spese. Dazio, diritti e IVA vuoti = stima dalle regole in Impostazioni.
+function CampiCosti({ tipo, costi, merce, data, dataArrivo, onCambia }: {
+  tipo: TipoOrdine; costi: Costi; merce: number; data: string; dataArrivo: string | null; onCambia: (c: Costi) => void
+}) {
+  const { voci } = useArchivio()
+  const stima = stimaImportazione({ ...costi, tipo, data, data_arrivo: dataArrivo }, merce, voci)
+  const tasse = tipo === 'giappone' || costi.iva != null || costi.dazio != null || costi.diritti != null
+  const set = (x: Partial<Costi>) => onCambia({ ...costi, ...x })
   return (
-    <div className="griglia-campi">
-      {VOCI_COSTO.filter(([, , solo]) => !solo || solo === tipo || Number(costi.iva) > 0 || Number(costi.dazio) > 0).map(([k, nome]) => (
-        <label key={k} className="campo">{nome} (€)
-          <input type="number" inputMode="decimal" step="0.01" min="0" value={costi[k] || ''}
-            onChange={(e) => onCambia({ ...costi, [k]: e.target.value === '' ? 0 : Number(e.target.value) })} />
+    <div className="colonna" style={{ gap: 12 }}>
+      <div className="griglia-campi">
+        <label className="campo">Spedizione (€)
+          <input type="number" inputMode="decimal" step="0.01" min="0" value={costi.spedizione || ''} onChange={(e) => set({ spedizione: numero(e.target.value) })} />
         </label>
-      ))}
+        <label className="campo">Commissioni (sito, proxy, pagamento) (€)
+          <input type="number" inputMode="decimal" step="0.01" min="0" value={costi.commissioni || ''} onChange={(e) => set({ commissioni: numero(e.target.value) })} />
+        </label>
+        {tasse && (
+          <label className="campo">Corriere
+            <input list="corrieri" value={costi.corriere ?? ''} onChange={(e) => set({ corriere: e.target.value || null })} />
+          </label>
+        )}
+        {tasse && TASSE.map(([k, nome]) => (
+          <label key={k} className="campo">{nome} (€)
+            <input type="number" inputMode="decimal" step="0.01" min="0" value={costi[k] ?? ''}
+              placeholder={`stima ${euro(stima[k])}`}
+              onChange={(e) => set({ [k]: e.target.value === '' ? null : Number(e.target.value) })} />
+          </label>
+        ))}
+        <label className="campo">Altre spese (€)
+          <input type="number" inputMode="decimal" step="0.01" min="0" value={costi.altre_spese || ''} onChange={(e) => set({ altre_spese: numero(e.target.value) })} />
+        </label>
+      </div>
+      <datalist id="corrieri">{CORRIERI.map((c) => <option key={c} value={c} />)}</datalist>
+      {tasse && (
+        <>
+          <label className="spunta"><input type="checkbox" checked={costi.iva_al_sito} onChange={(e) => set({ iva_al_sito: e.target.checked })} />IVA già pagata al sito (IOSS)</label>
+          <span className="tenue piccolo">Lascia vuoti dazio, diritti e IVA per usare la stima, e scrivi la cifra vera quando paghi il corriere. Le regole sono in Impostazioni, Tasse di importazione.</span>
+        </>
+      )}
     </div>
+  )
+}
+
+// Righe del riepilogo costi, con le voci stimate segnate e spiegate.
+function RiepilogoCosti({ o, merce }: { o: Ordine; merce: number }) {
+  const { voci } = useArchivio()
+  const c = costiEffettivi(o, merce, voci)
+  const righe: [string, number, CategoriaVoce | null][] = [
+    ['Spedizione', c.spedizione, null],
+    ['Commissioni', c.commissioni, null],
+    ['Dazio', c.dazio, 'dazio'],
+    ['Diritti e sdoganamento', c.diritti, 'diritti'],
+    ['IVA all\'importazione', c.iva, 'iva'],
+    ['Altre spese', c.altre_spese, null],
+  ]
+  return (
+    <>
+      <div className="riga tra"><span>Carte</span><span className="mono">{euro(merce)}</span></div>
+      {righe.filter(([, n]) => n > 0).map(([nome, n, cat]) => {
+        const stimata = cat != null && c.stimati.includes(cat)
+        return (
+          <div key={nome} className="colonna" style={{ gap: 2 }}>
+            <div className="riga tra tenue">
+              <span>{nome}{stimata && <span className="etichetta arancio" style={{ marginLeft: 8 }}>stima</span>}</span>
+              <span className="mono">{euro(n)}</span>
+            </div>
+            {stimata && c.stima.righe.filter((r) => r.voce.categoria === cat && r.importo > 0 && r.voce.nome !== nome).map((r) => (
+              <span key={r.voce.id} className="tenue" style={{ fontSize: 12, paddingLeft: 12 }}>{r.voce.nome}: {euro(r.importo)}</span>
+            ))}
+          </div>
+        )
+      })}
+      {o.tipo === 'giappone' && o.iva_al_sito && <span className="tenue piccolo">IVA già pagata al sito.</span>}
+      <div className="riga tra" style={{ fontWeight: 600 }}>
+        <span>Totale effettivo{c.stimati.length > 0 && <span className="tenue" style={{ fontWeight: 400 }}> (stimato)</span>}</span>
+        <span className="mono">{euro(merce + c.totale)}</span>
+      </div>
+    </>
   )
 }
 
@@ -157,7 +225,7 @@ export function NuovoOrdine() {
 function ModuloNuovoOrdine() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  const { wantlist, ricarica } = useArchivio()
+  const { wantlist, voci: regole, ricarica } = useArchivio()
   const iniziali = useMemo(() => (params.get('da') || '').split(',').map((id) => wantlist.find((d) => d.id === id)).filter(Boolean).map((d) => daDesiderio(d!)), [params, wantlist])
   const giapponese = iniziali.some((v) => v.carta.lingua === 'ja')
   const [tipo, setTipo] = useState<TipoOrdine>(giapponese ? 'giappone' : 'europa')
@@ -165,14 +233,14 @@ function ModuloNuovoOrdine() {
   const [venditore, setVenditore] = useState('')
   const [data, setData] = useState(new Date().toISOString().slice(0, 10))
   const [tracciamento, setTracciamento] = useState('')
-  const [costi, setCosti] = useState<Costi>({ spedizione: 0, commissioni: 0, iva: 0, dazio: 0, altre_spese: 0 })
+  const [costi, setCosti] = useState<Costi>(COSTI_VUOTI)
   const [voci, setVoci] = useState<Voce[]>(iniziali)
   const [scegli, setScegli] = useState(false)
   const [invio, setInvio] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
 
   const totCarte = voci.reduce((a, v) => a + Number(v.prezzo || 0), 0)
-  const spese = Object.values(costi).reduce((a, b) => a + Number(b || 0), 0)
+  const bozza: Ordine = { ...costi, id: '', tipo, sito, venditore: null, data, tracciamento: null, tappa: 0, arrivato: false, data_arrivo: null, note: null, created_at: '' }
   const cambia = (k: string, x: Partial<Voce>) => setVoci((vs) => vs.map((v) => (v.chiave === k ? { ...v, ...x } : v)))
 
   async function salva(e: React.FormEvent) {
@@ -194,7 +262,7 @@ function ModuloNuovoOrdine() {
         }))
         if (v.desiderio) await aggiornaDesiderio(v.desiderio.id, { ordine_id: o.id })
       }
-      await salvaQuote(o, create)
+      await salvaQuote(o, create, regole)
       await ricarica()
       navigate(`/ordine/${o.id}`, { replace: true })
     } catch (err) {
@@ -249,11 +317,9 @@ function ModuloNuovoOrdine() {
 
         <section className="scheda">
           <h2>Spese dell'ordine</h2>
-          <CampiCosti tipo={tipo} costi={costi} onCambia={setCosti} />
+          <CampiCosti tipo={tipo} costi={costi} merce={totCarte} data={data} dataArrivo={null} onCambia={setCosti} />
           <div className="colonna" style={{ gap: 6, paddingTop: 8, borderTop: '1px solid var(--bordo)' }}>
-            <div className="riga tra"><span>Carte</span><span className="mono">{euro(totCarte)}</span></div>
-            <div className="riga tra"><span>Spese</span><span className="mono">{euro(spese)}</span></div>
-            <div className="riga tra" style={{ fontWeight: 600 }}><span>Totale effettivo</span><span className="mono">{euro(totCarte + spese)}</span></div>
+            <RiepilogoCosti o={bozza} merce={totCarte} />
             <span className="tenue piccolo">Le spese vengono divise sulle carte in proporzione al prezzo.</span>
           </div>
         </section>
@@ -282,18 +348,26 @@ function ModuloNuovoOrdine() {
 export function OrdineVista() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { ordini, copie, wantlist, caricato, ricarica } = useArchivio()
+  const { ordini, copie, wantlist, voci, caricato, ricarica } = useArchivio()
   const [costi, setCosti] = useState<Costi | null>(null)
   const [occupato, setOccupato] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
+  const ordine = ordini.find((x) => x.id === id)
+
+  // Se le regole o la data cambiano la stima, riallinea le quote salvate sulle carte.
+  useEffect(() => {
+    if (!caricato || !ordine) return
+    const carteOrdine = copie.filter((c) => c.ordine_id === ordine.id)
+    void salvaQuote(ordine, carteOrdine, voci).then((cambiate) => { if (cambiate) void ricarica() }).catch(() => {})
+  }, [caricato, ordine, copie, voci, ricarica])
+
   if (!caricato) return <main className="pagina"><Attesa /></main>
-  const o = ordini.find((x) => x.id === id)
+  const o = ordine
   if (!o) return <main className="pagina"><Indietro to="/viaggio">In viaggio</Indietro><div className="vuoto">Ordine non trovato.</div></main>
   const carte = copie.filter((c) => c.ordine_id === o.id)
   const tappe = TAPPE[o.tipo]
-  const quote = calcolaQuote(o, carte)
-  const totCarte = carte.reduce((a, c) => a + Number(c.prezzo_pagato || 0), 0)
-  const spese = speseOrdine(o)
+  const quote = calcolaQuote(o, carte, voci)
+  const totCarte = valoreMerce(carte)
 
   async function esegui(f: () => Promise<unknown>) {
     setOccupato(true); setErrore(null)
@@ -368,27 +442,23 @@ export function OrdineVista() {
           )
         })}
         <div className="colonna" style={{ gap: 6, paddingTop: 10, borderTop: '1px solid var(--bordo)' }}>
-          <div className="riga tra"><span>Carte</span><span className="mono">{euro(totCarte)}</span></div>
-          {VOCI_COSTO.filter(([k]) => Number(o[k]) > 0).map(([k, nome]) => (
-            <div key={k} className="riga tra tenue"><span>{nome}</span><span className="mono">{euro(o[k])}</span></div>
-          ))}
-          <div className="riga tra" style={{ fontWeight: 600 }}><span>Totale effettivo</span><span className="mono">{euro(totCarte + spese)}</span></div>
+          <RiepilogoCosti o={o} merce={totCarte} />
           <span className="tenue piccolo">Per ogni carta: prezzo + quota delle spese, divisa in proporzione al prezzo.</span>
         </div>
         {costi ? (
           <div className="colonna" style={{ gap: 10 }}>
-            <CampiCosti tipo={o.tipo} costi={costi} onCambia={setCosti} />
+            <CampiCosti tipo={o.tipo} costi={costi} merce={totCarte} data={o.data} dataArrivo={o.data_arrivo} onCambia={setCosti} />
             <div className="griglia-campi">
               <button type="button" className="btn" onClick={() => setCosti(null)}>Annulla</button>
               <button type="button" className="btn primario" disabled={occupato} onClick={() => void esegui(async () => {
                 await aggiornaOrdine(o.id, costi)
-                await salvaQuote({ ...o, ...costi }, carte)
+                await salvaQuote({ ...o, ...costi }, carte, voci)
                 setCosti(null)
               })}>Salva le spese</button>
             </div>
           </div>
         ) : (
-          <button type="button" className="btn" onClick={() => setCosti({ spedizione: o.spedizione, commissioni: o.commissioni, iva: o.iva, dazio: o.dazio, altre_spese: o.altre_spese })}>Modifica le spese</button>
+          <button type="button" className="btn" onClick={() => setCosti({ spedizione: o.spedizione, commissioni: o.commissioni, iva: o.iva, dazio: o.dazio, diritti: o.diritti, altre_spese: o.altre_spese, corriere: o.corriere, iva_al_sito: o.iva_al_sito })}>Modifica le spese</button>
         )}
       </section>
 

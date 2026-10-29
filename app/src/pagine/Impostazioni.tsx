@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useArchivio } from '../archivio'
 import { eliminaPosizione, nuovaPosizione, rinominaPosizione } from '../dati'
+import { statoVoce } from '../importazione'
 import { supabase } from '../supabase'
 
 export function Impostazioni() {
-  const { posizioni, copie, ricarica } = useArchivio()
+  const { posizioni, copie, voci, ricarica } = useArchivio()
   const [email, setEmail] = useState('')
   const [nuova, setNuova] = useState('')
   const [errore, setErrore] = useState<string | null>(null)
@@ -48,6 +50,12 @@ export function Impostazioni() {
       </section>
 
       <section className="scheda">
+        <h2>Tasse di importazione</h2>
+        <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>Regole per stimare dazio, diritti e IVA degli ordini dal Giappone: {voci.filter((v) => statoVoce(v) === 'attiva').length} in vigore, {voci.filter((v) => statoVoce(v) === 'futura').length} in arrivo.</span>
+        <Link className="btn" to="/impostazioni/tasse">Gestisci le regole</Link>
+      </section>
+
+      <section className="scheda">
         <h2>Catalogo delle carte</h2>
         <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>Da TCGdex, {catalogo || '…'}. Si aggiorna da solo ogni settimana.</span>
       </section>
@@ -58,7 +66,7 @@ export function Impostazioni() {
         <button type="button" className="btn" onClick={() => void supabase.auth.signOut()}>Esci</button>
       </section>
 
-      <span className="tenue piccolo">Versione 0.1, tappa 1. In arrivo: scale di condizione, siti per la ricerca, proxy e cambi.</span>
+      <span className="tenue piccolo">Versione 0.2, tappa 2. In arrivo: scale di condizione, siti per la ricerca, proxy e cambi.</span>
     </main>
   )
 }

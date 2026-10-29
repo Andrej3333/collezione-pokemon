@@ -14,6 +14,7 @@ import { Scheda } from './pagine/Scheda'
 import { TutteLeCarte } from './pagine/TutteLeCarte'
 import { DesiderioVista, NuovoDesiderio, Wantlist } from './pagine/Wantlist'
 import { NuovoOrdine, OrdineVista, Viaggio } from './pagine/Ordini'
+import { Tasse } from './pagine/Tasse'
 
 export function App() {
   const [sessione, setSessione] = useState<Session | null | undefined>(undefined)
@@ -43,6 +44,7 @@ export function App() {
           <Route path="/nuova" element={<NuovaCollezione />} />
           <Route path="/collezione/:id" element={<CollezioneVista />} />
           <Route path="/impostazioni" element={<Impostazioni />} />
+          <Route path="/impostazioni/tasse" element={<Tasse />} />
           <Route path="/wantlist" element={<Wantlist />} />
           <Route path="/wantlist/aggiungi" element={<NuovoDesiderio />} />
           <Route path="/desiderio/:id" element={<DesiderioVista />} />

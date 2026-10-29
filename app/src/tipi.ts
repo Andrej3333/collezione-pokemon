@@ -97,11 +97,40 @@ export interface Ordine {
   tappa: number
   spedizione: number
   commissioni: number
-  iva: number
-  dazio: number
+  iva: number | null // null = stima dalle regole di importazione
+  dazio: number | null
+  diritti: number | null
   altre_spese: number
+  corriere: string | null
+  iva_al_sito: boolean
   arrivato: boolean
   data_arrivo: string | null
+  note: string | null
+  created_at: string
+}
+
+export type CategoriaVoce = 'dazio' | 'diritti' | 'iva'
+
+export const CATEGORIE_VOCE: { id: CategoriaVoce; nome: string }[] = [
+  { id: 'dazio', nome: 'Dazio' },
+  { id: 'diritti', nome: 'Diritti e sdoganamento' },
+  { id: 'iva', nome: 'IVA' },
+]
+
+// Una regola per stimare le tasse di importazione degli ordini extra-UE.
+export interface VoceImportazione {
+  id: string
+  nome: string
+  categoria: CategoriaVoce
+  calcolo: 'fisso' | 'percentuale'
+  valore: number
+  base_iva: boolean // se l'importo entra nella base su cui si calcola l'IVA
+  valore_min: number | null // si applica solo se la merce vale più di questo
+  valore_max: number | null // si applica solo se la merce vale al massimo questo
+  corriere: string | null // si applica solo a questo corriere
+  dal: string | null
+  al: string | null
+  attiva: boolean
   note: string | null
   created_at: string
 }

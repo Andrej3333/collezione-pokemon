@@ -26,6 +26,9 @@ App personale per il collezionismo (non per il commercio) di carte Pokémon, su 
 - Nessun accesso automatico in background ai siti (niente scraping): l'app legge solo le pagine che apre l'utente.
 - Immagini, catena di fonti: TCGdex, Limitless, database ufficiale giapponese, TCGplayer, TCG Collector, foto dell'utente.
 - Bulbapedia: blocca gli accessi automatici, quindi non viene interrogata in automatico. Nella scheda carta c'è una piccola icona che apre il browser interno direttamente sulla pagina Bulbapedia della carta; l'app riconosce le immagini nella pagina e le salva da sola (le incerte vanno in "da confermare"). Alta risoluzione solo per carte in collezione e wantlist, una alla volta.
+- Ordini: spese divise sulle carte in proporzione al prezzo, sempre visibili sia l'ordine intero sia il costo effettivo di ogni carta.
+- Tasse di importazione (ordini dal Giappone): dazio, diritti e IVA stimati con regole modificabili in Impostazioni (importo fisso o percentuale, soglie di valore, date di validità, corriere). Vale la regola in vigore alla data di arrivo. Le stime restano segnate finché l'utente non inserisce la cifra vera.
+- Ordini e costi letti in automatico dalle pagine "I miei acquisti" dei siti (Cardmarket, eBay, proxy) tramite il browser interno, nella tappa 4: le API ufficiali sono chiuse o limitate.
 - Scale di condizione: ogni sito mostra la sua voce originale, con un'equivalenza indicativa (modificabile) nella scala Cardmarket.
 
 ## Tappe

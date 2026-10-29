@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
-import type { Collezione, Copia, Desiderio, Legame, Ordine, Posizione } from './tipi'
+import { costiEffettivi, VOCI_PREDEFINITE } from './importazione'
+import type { Collezione, Copia, Desiderio, Legame, Ordine, Posizione, VoceImportazione } from './tipi'
 
 function controlla<T>(r: { data: T | null; error: { message: string } | null }): T {
   if (r.error) throw new Error(r.error.message)
@@ -125,14 +126,17 @@ export async function eliminaOrdine(id: string): Promise<void> {
   controlla(await supabase.from('ordini').delete().eq('id', id))
 }
 
-export function speseOrdine(o: Ordine): number {
-  return [o.spedizione, o.commissioni, o.iva, o.dazio, o.altre_spese].reduce((a, b) => a + Number(b || 0), 0)
+export const valoreMerce = (carte: Pick<Copia, 'prezzo_pagato'>[]) => carte.reduce((a, c) => a + Number(c.prezzo_pagato || 0), 0)
+
+// Spese dell'ordine oltre alle carte, con le tasse stimate dove non sono confermate.
+export function speseOrdine(o: Ordine, carte: Copia[], voci: VoceImportazione[]): number {
+  return costiEffettivi(o, valoreMerce(carte), voci).totale
 }
 
 // Divide le spese dell'ordine sulle carte, in proporzione al prezzo; se nessuna ha un prezzo, in parti uguali.
-export function calcolaQuote(o: Ordine, carte: Copia[]): Map<string, number> {
-  const spese = speseOrdine(o)
-  const tot = carte.reduce((a, c) => a + Number(c.prezzo_pagato || 0), 0)
+export function calcolaQuote(o: Ordine, carte: Copia[], voci: VoceImportazione[]): Map<string, number> {
+  const spese = speseOrdine(o, carte, voci)
+  const tot = valoreMerce(carte)
   const quote = new Map<string, number>()
   let assegnato = 0
   carte.forEach((c, i) => {
@@ -145,10 +149,36 @@ export function calcolaQuote(o: Ordine, carte: Copia[]): Map<string, number> {
   return quote
 }
 
-export async function salvaQuote(o: Ordine, carte: Copia[]): Promise<void> {
-  const quote = calcolaQuote(o, carte)
+export async function salvaQuote(o: Ordine, carte: Copia[], voci: VoceImportazione[]): Promise<boolean> {
+  const quote = calcolaQuote(o, carte, voci)
+  let cambiate = false
   for (const c of carte) {
     const q = quote.get(c.id) ?? 0
-    if (Number(c.quota_spese ?? -1) !== q) await aggiornaCopia(c.id, { quota_spese: q })
+    if (Number(c.quota_spese ?? -1) !== q) { await aggiornaCopia(c.id, { quota_spese: q }); cambiate = true }
   }
+  return cambiate
+}
+
+// --- Regole per le tasse di importazione
+export async function elencoVoci(): Promise<VoceImportazione[]> {
+  let voci: VoceImportazione[] = controlla(await supabase.from('voci_importazione').select('*').order('created_at'))
+  if (voci.length === 0) voci = controlla(await supabase.from('voci_importazione').insert(VOCI_PREDEFINITE).select())
+  return voci
+}
+
+export async function nuovaVoce(v: Partial<VoceImportazione>): Promise<void> {
+  controlla(await supabase.from('voci_importazione').insert(v))
+}
+
+export async function aggiornaVoce(id: string, v: Partial<VoceImportazione>): Promise<void> {
+  controlla(await supabase.from('voci_importazione').update(v).eq('id', id))
+}
+
+export async function eliminaVoce(id: string): Promise<void> {
+  controlla(await supabase.from('voci_importazione').delete().eq('id', id))
+}
+
+export async function ripristinaVoci(voci: VoceImportazione[]): Promise<void> {
+  for (const v of voci) await eliminaVoce(v.id)
+  controlla(await supabase.from('voci_importazione').insert(VOCI_PREDEFINITE))
 }
