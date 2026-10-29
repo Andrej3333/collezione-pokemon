@@ -1,0 +1,39 @@
+name: Verifica fonti
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "strumenti/verifica_fonti.py"
+      - ".github/workflows/verifica-fonti.yml"
+  workflow_dispatch:
+  schedule:
+    # ogni giorno alle 05:17 UTC: serve anche a capire se i lavori programmati partono
+    - cron: "17 5 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verifica-fonti
+  cancel-in-progress: false
+
+jobs:
+  verifica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verifica delle fonti
+        run: python strumenti/verifica_fonti.py
+      - name: Salva il resoconto nel repository
+        run: |
+          git config user.name "verifica-fonti"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add verifiche
+          git commit -m "Resoconto verifica fonti" || echo "nessuna modifica"
+          git pull --rebase origin main
+          git push origin HEAD:main
