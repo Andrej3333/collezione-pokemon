@@ -1,0 +1,50 @@
+name: Prezzi
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "strumenti/prezzi.py"
+      - ".github/workflows/prezzi.yml"
+  workflow_dispatch:
+    inputs:
+      forza_elenco:
+        description: "Riscarica l'elenco completo dei prodotti TCGplayer"
+        type: boolean
+        default: false
+  schedule:
+    # ogni notte alle 03:41 UTC: il file di Cardmarket esce verso le 02, TCGCSV verso le 20
+    - cron: "41 3 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prezzi
+  cancel-in-progress: false
+
+jobs:
+  prezzi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installa il collegamento al database
+        run: pip install -q "psycopg[binary]>=3.2"
+      - name: Aggiorna i prezzi
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          FORZA_ELENCO: ${{ inputs.forza_elenco && '1' || '0' }}
+        run: python strumenti/prezzi.py
+      - name: Salva il resoconto nel repository
+        if: always()
+        run: |
+          git config user.name "aggiorna-prezzi"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add verifiche/prezzi.md || true
+          git commit -m "Resoconto aggiornamento prezzi" || echo "nessuna modifica"
+          git pull --rebase origin main
+          git push origin HEAD:main
