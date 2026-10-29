@@ -86,6 +86,7 @@ export interface Dettaglio {
   illustratore: string | null
   setNome: string | null
   cardmarketId: number | null
+  tcgplayerId: number | null
   immagine: string | null
   varianti: string[]
 }
@@ -102,6 +103,14 @@ function variantiDa(setId: string, v: Record<string, boolean> | undefined): stri
   return out
 }
 
+function primoTcgplayer(t: Record<string, unknown> | null | undefined): number | null {
+  for (const v of Object.values(t ?? {})) {
+    const id = (v as { productId?: number } | null)?.productId
+    if (typeof id === 'number') return id
+  }
+  return null
+}
+
 export async function dettaglio(lingua: Lingua, id: string): Promise<Dettaglio> {
   try {
     const r = await fetch(`https://api.tcgdex.net/v2/${lingua}/cards/${encodeURIComponent(id)}`)
@@ -112,11 +121,12 @@ export async function dettaglio(lingua: Lingua, id: string): Promise<Dettaglio> 
       illustratore: d.illustrator ?? null,
       setNome: d.set?.name ?? null,
       cardmarketId: d.pricing?.cardmarket?.idProduct ?? null,
+      tcgplayerId: primoTcgplayer(d.pricing?.tcgplayer),
       immagine: d.image ?? null,
       varianti: variantiDa(setIdDi(id), d.variants),
     }
   } catch {
-    return { rarita: null, illustratore: null, setNome: null, cardmarketId: null, immagine: null, varianti: variantiDa(setIdDi(id), undefined) }
+    return { rarita: null, illustratore: null, setNome: null, cardmarketId: null, tcgplayerId: null, immagine: null, varianti: variantiDa(setIdDi(id), undefined) }
   }
 }
 

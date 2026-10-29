@@ -4,7 +4,7 @@ import { Attesa, Indietro } from '../comuni'
 import { aggiornaVoce, eliminaVoce, nuovaVoce, ripristinaVoci } from '../dati'
 import { condizioniVoce, descriviVoce, statoVoce, stimaImportazione } from '../importazione'
 import type { CategoriaVoce, VoceImportazione } from '../tipi'
-import { CATEGORIE_VOCE } from '../tipi'
+import { CATEGORIE_VOCE, oggiLocale } from '../tipi'
 
 const euro = (n: number) => `€ ${n.toFixed(2).replace('.', ',')}`
 const STATI = {
@@ -77,7 +77,7 @@ export function Tasse() {
   const { voci, caricato, ricarica } = useArchivio()
   const [aperta, setAperta] = useState<string | null>(null)
   const [errore, setErrore] = useState<string | null>(null)
-  const [prova, setProva] = useState({ merce: 80, spedizione: 15, data: new Date().toISOString().slice(0, 10) })
+  const [prova, setProva] = useState({ merce: 80, spedizione: 15, data: oggiLocale() })
   if (!caricato) return <main className="pagina"><Attesa /></main>
 
   async function esegui(f: () => Promise<unknown>) {

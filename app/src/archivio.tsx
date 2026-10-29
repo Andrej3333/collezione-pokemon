@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { elencoCollezioni, elencoCopie, elencoLegami, elencoOrdini, elencoPosizioni, elencoVoci, elencoWantlist } from './dati'
+import { caricaPrezzi, PREZZI_VUOTI, type Prezzi } from './prezzi'
 import type { Collezione, Copia, Desiderio, Legame, Ordine, Posizione, VoceImportazione } from './tipi'
 
 interface Archivio {
@@ -10,6 +11,7 @@ interface Archivio {
   wantlist: Desiderio[]
   ordini: Ordine[]
   voci: VoceImportazione[]
+  prezzi: Prezzi
   caricato: boolean
   errore: string | null
   ricarica: () => Promise<void>
@@ -19,7 +21,7 @@ const Ctx = createContext<Archivio | null>(null)
 
 export function ArchivioProvider({ children }: { children: ReactNode }) {
   const [stato, setStato] = useState<Omit<Archivio, 'ricarica'>>({
-    copie: [], collezioni: [], legami: [], posizioni: [], wantlist: [], ordini: [], voci: [], caricato: false, errore: null,
+    copie: [], collezioni: [], legami: [], posizioni: [], wantlist: [], ordini: [], voci: [], prezzi: PREZZI_VUOTI, caricato: false, errore: null,
   })
 
   const ricarica = useCallback(async () => {
@@ -28,7 +30,12 @@ export function ArchivioProvider({ children }: { children: ReactNode }) {
         elencoCopie(), elencoCollezioni(), elencoLegami(), elencoPosizioni(), elencoWantlist(), elencoOrdini(),
         elencoVoci().catch(() => [] as VoceImportazione[]), // senza regole l'app funziona lo stesso, senza stime
       ])
-      setStato({ copie, collezioni, legami, posizioni, wantlist, ordini, voci, caricato: true, errore: null })
+      const seguite = [...copie.filter((c) => c.stato !== 'venduta'), ...wantlist]
+      const prezzi = await caricaPrezzi(
+        seguite.map((c) => c.cardmarket_id).filter((x): x is number => x != null),
+        seguite.map((c) => c.tcgplayer_id).filter((x): x is number => x != null),
+      ).catch(() => PREZZI_VUOTI) // senza prezzi l'app funziona lo stesso
+      setStato({ copie, collezioni, legami, posizioni, wantlist, ordini, voci, prezzi, caricato: true, errore: null })
     } catch (e) {
       setStato((s) => ({ ...s, caricato: true, errore: (e as Error).message }))
     }

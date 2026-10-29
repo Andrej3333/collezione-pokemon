@@ -1,4 +1,4 @@
-import type { CategoriaVoce, Ordine, VoceImportazione } from './tipi'
+import { oggiLocale, type CategoriaVoce, type Ordine, type VoceImportazione } from './tipi'
 
 // Voci di partenza, dalle regole in vigore a fine ottobre 2026. Si modificano da Impostazioni.
 export const VOCI_PREDEFINITE: Partial<VoceImportazione>[] = [
@@ -42,11 +42,11 @@ const tondo = (n: number) => Math.round(n * 100) / 100
 // La data che conta per la dogana: l'arrivo, o oggi se il pacco non è ancora arrivato.
 export function dataImportazione(o: Pick<Ordine, 'data' | 'data_arrivo'>): string {
   if (o.data_arrivo) return o.data_arrivo
-  const oggi = new Date().toISOString().slice(0, 10)
+  const oggi = oggiLocale()
   return oggi > o.data ? oggi : o.data
 }
 
-export function statoVoce(v: VoceImportazione, data = new Date().toISOString().slice(0, 10)): 'attiva' | 'futura' | 'scaduta' | 'spenta' {
+export function statoVoce(v: VoceImportazione, data = oggiLocale()): 'attiva' | 'futura' | 'scaduta' | 'spenta' {
   if (!v.attiva) return 'spenta'
   if (v.dal && data < v.dal) return 'futura'
   if (v.al && data >= v.al) return 'scaduta'

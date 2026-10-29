@@ -4,6 +4,7 @@ import { useArchivio } from '../archivio'
 import { Attesa, breveLingua, EtichettaStato, ImmagineCopia, Indietro } from '../comuni'
 import type { Copia, Lingua, Stato } from '../tipi'
 import { LINGUE } from '../tipi'
+import { PrezzoBreve } from './Valore'
 
 export function GrigliaCopie({ copie }: { copie: Copia[] }) {
   return (
@@ -15,6 +16,7 @@ export function GrigliaCopie({ copie }: { copie: Copia[] }) {
             <span className="nome taglia">{c.nome}</span>
             <span className="tenue piccolo taglia">{c.set_nome || c.set_id}</span>
             <span className="tenue piccolo taglia">{c.numero} · {breveLingua(c.lingua)} · {c.gradata ? `${c.ente ?? ''} ${c.voto ?? ''}`.trim() : c.condizione}</span>
+            <PrezzoBreve cm={c.cardmarket_id} tp={c.tcgplayer_id} variante={c.variante} />
           </span>
           <EtichettaStato stato={c.stato} />
         </Link>

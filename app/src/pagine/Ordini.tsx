@@ -9,7 +9,7 @@ import {
 } from '../dati'
 import { costiEffettivi, stimaImportazione } from '../importazione'
 import type { CategoriaVoce, Copia, Desiderio, Lingua, Ordine, TipoOrdine } from '../tipi'
-import { CONDIZIONI, TAPPE } from '../tipi'
+import { CONDIZIONI, oggiLocale, TAPPE } from '../tipi'
 import { CercaCarta } from './CercaCarta'
 
 const euro = (n: number | null | undefined) => `€ ${Number(n || 0).toFixed(2).replace('.', ',')}`
@@ -169,7 +169,7 @@ function RiepilogoCosti({ o, merce }: { o: Ordine; merce: number }) {
 interface Voce {
   chiave: string
   desiderio?: Desiderio
-  carta: { carta_id: string; lingua: Lingua; nome: string; set_id: string; set_nome: string | null; numero: string; immagine: string | null; cardmarket_id: number | null }
+  carta: { carta_id: string; lingua: Lingua; nome: string; set_id: string; set_nome: string | null; numero: string; immagine: string | null; cardmarket_id: number | null; tcgplayer_id: number | null }
   variante: string | null
   condizione: string
   prezzo: number | null
@@ -178,7 +178,7 @@ interface Voce {
 function daDesiderio(d: Desiderio): Voce {
   return {
     chiave: d.id, desiderio: d, variante: d.variante, condizione: d.condizione_min || 'NM', prezzo: null,
-    carta: { carta_id: d.carta_id, lingua: d.lingua, nome: d.nome, set_id: d.set_id, set_nome: d.set_nome, numero: d.numero, immagine: d.immagine, cardmarket_id: d.cardmarket_id },
+    carta: { carta_id: d.carta_id, lingua: d.lingua, nome: d.nome, set_id: d.set_id, set_nome: d.set_nome, numero: d.numero, immagine: d.immagine, cardmarket_id: d.cardmarket_id, tcgplayer_id: d.tcgplayer_id },
   }
 }
 
@@ -231,7 +231,7 @@ function ModuloNuovoOrdine() {
   const [tipo, setTipo] = useState<TipoOrdine>(giapponese ? 'giappone' : 'europa')
   const [sito, setSito] = useState(giapponese ? 'Mercari' : 'Cardmarket')
   const [venditore, setVenditore] = useState('')
-  const [data, setData] = useState(new Date().toISOString().slice(0, 10))
+  const [data, setData] = useState(oggiLocale())
   const [tracciamento, setTracciamento] = useState('')
   const [costi, setCosti] = useState<Costi>(COSTI_VUOTI)
   const [voci, setVoci] = useState<Voce[]>(iniziali)
@@ -254,7 +254,7 @@ function ModuloNuovoOrdine() {
         let extra = {}
         if (!v.desiderio) {
           const d = await dettaglio(v.carta.lingua, v.carta.carta_id)
-          extra = { rarita: d.rarita, illustratore: d.illustratore, cardmarket_id: d.cardmarketId, set_nome: d.setNome ?? v.carta.set_nome }
+          extra = { rarita: d.rarita, illustratore: d.illustratore, cardmarket_id: d.cardmarketId, tcgplayer_id: d.tcgplayerId, set_nome: d.setNome ?? v.carta.set_nome }
         }
         create.push(await nuovaCopia({
           ...v.carta, ...extra, stato: 'viaggio', ordine_id: o.id, variante: v.variante, condizione: v.condizione,
@@ -334,7 +334,7 @@ function ModuloNuovoOrdine() {
           onCatalogo={(c, lingua, cat) => {
             setVoci((vs) => [...vs, {
               chiave: `${c.id}-${Date.now()}`, variante: null, condizione: 'NM', prezzo: null,
-              carta: { carta_id: c.id, lingua, nome: c.nome, set_id: c.setId, set_nome: cat.setPerId.get(c.setId)?.nome ?? null, numero: c.numero, immagine: c.immagine || null, cardmarket_id: null },
+              carta: { carta_id: c.id, lingua, nome: c.nome, set_id: c.setId, set_nome: cat.setPerId.get(c.setId)?.nome ?? null, numero: c.numero, immagine: c.immagine || null, cardmarket_id: null, tcgplayer_id: null },
             }])
             setScegli(false)
           }} />
@@ -376,7 +376,7 @@ export function OrdineVista() {
   }
 
   async function arrivato() {
-    const oggi = new Date().toISOString().slice(0, 10)
+    const oggi = oggiLocale()
     await aggiornaOrdine(o!.id, { arrivato: true, tappa: tappe.length - 1, data_arrivo: oggi })
     for (const c of carte) await aggiornaCopia(c.id, { stato: 'collezione', data_arrivo: c.data_arrivo || oggi })
     for (const d of wantlist.filter((x) => x.ordine_id === o!.id)) await eliminaDesiderio(d.id)

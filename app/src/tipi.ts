@@ -53,6 +53,7 @@ export interface Copia {
   variante: string | null
   ordine_id: string | null
   quota_spese: number | null
+  tcgplayer_id: number | null
   created_at: string
 }
 
@@ -76,6 +77,7 @@ export interface Desiderio {
   gradata: '' | 'si' | 'no'
   prezzo_max: number | null
   ordine_id: string | null
+  tcgplayer_id: number | null
   note: string | null
   created_at: string
 }
@@ -162,4 +164,10 @@ export interface Posizione {
 export interface Legame {
   collezione_id: string
   copia_id: string
+}
+
+// La data di oggi nel fuso del telefono (non in UTC), come AAAA-MM-GG.
+export function oggiLocale(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }

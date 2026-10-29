@@ -5,6 +5,7 @@ import { Attesa, EtichettaStato, ImmagineCopia, Indietro } from '../comuni'
 import { aggiornaCopia, caricaFoto, collega, eliminaCopia, scollega } from '../dati'
 import { CONDIZIONI, LINGUE } from '../tipi'
 import { FormCopia, soloValori } from './FormCopia'
+import { ValoreCarta } from './Valore'
 import { LinkSiti } from './Wantlist'
 
 function indirizzoBulbapedia(nome: string, setNome: string | null, numero: string): string {
@@ -121,10 +122,12 @@ export function Scheda() {
             )}
           </section>
 
+          <ValoreCarta cm={c.cardmarket_id} tp={c.tcgplayer_id} variante={c.variante} lingua={c.lingua} nome={c.nome} numero={c.numero} setId={c.set_id}
+            costo={c.prezzo_pagato != null ? Number(c.prezzo_pagato) + Number(c.quota_spese || 0) : null}
+            onTcgplayer={(tp) => esegui(() => aggiornaCopia(c.id, { tcgplayer_id: tp }))} />
+
           <section className="scheda">
-            <h2>Valore della carta</h2>
-            <div className="avviso">Prezzi e andamento arrivano con la tappa 3.{c.cardmarket_id ? ` Prodotto Cardmarket già collegato (${c.cardmarket_id}).` : ''}</div>
-            <span style={{ fontWeight: 600, fontSize: 14 }}>Valuta la tua copia: cerca sui siti</span>
+            <h2>Valuta la tua copia sui siti</h2>
             <LinkSiti c={c} />
           </section>
 

@@ -35,7 +35,7 @@ export function AggiungiCarta() {
               carta_id: c.id, lingua, nome: c.nome, set_id: c.setId,
               set_nome: d.setNome ?? set?.nome ?? null, numero: c.numero,
               rarita: d.rarita, illustratore: d.illustratore, immagine: c.immagine || d.immagine,
-              cardmarket_id: d.cardmarketId,
+              cardmarket_id: d.cardmarketId, tcgplayer_id: d.tcgplayerId,
             })
             for (const id of collezioni) await collega(id, copia.id)
             await ricarica()

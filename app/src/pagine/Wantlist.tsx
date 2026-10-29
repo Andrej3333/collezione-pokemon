@@ -9,6 +9,8 @@ import type { Desiderio, Lingua } from '../tipi'
 import { CONDIZIONI } from '../tipi'
 import { CartaScelta, CercaCarta } from './CercaCarta'
 import { CampoVariante } from './FormCopia'
+import { PrezzoBreve, ValoreCarta } from './Valore'
+import { valorePrincipale } from '../prezzi'
 
 export function requisiti(d: Desiderio): string {
   return [
@@ -24,7 +26,7 @@ function ImmagineDesiderio({ d, grande }: { d: Desiderio; grande?: boolean }) {
 }
 
 export function Wantlist() {
-  const { wantlist, caricato } = useArchivio()
+  const { wantlist, prezzi, caricato } = useArchivio()
   if (!caricato) return <main className="pagina"><Attesa /></main>
   return (
     <main className="pagina" style={{ maxWidth: 900 }}>
@@ -44,6 +46,14 @@ export function Wantlist() {
               <span className={`taglia ${d.lingua === 'ja' ? 'jp' : ''}`} style={{ fontWeight: 600 }}>{d.nome}</span>
               <span className="tenue piccolo taglia">{d.set_nome || d.set_id} · {d.numero} · {breveLingua(d.lingua)}</span>
               {requisiti(d) && <span className="piccolo taglia" style={{ color: 'var(--testo2)' }}>{requisiti(d)}</span>}
+              <span className="riga a-capo" style={{ gap: 4, columnGap: 8 }}>
+                <PrezzoBreve cm={d.cardmarket_id} tp={d.tcgplayer_id} variante={d.variante} />
+                {(() => {
+                  const v = valorePrincipale(prezzi, d.cardmarket_id, d.tcgplayer_id, d.variante)
+                  return v && d.prezzo_max != null && v.euro <= d.prezzo_max && !d.ordine_id
+                    ? <span className="etichetta verde">sotto il tuo massimo</span> : null
+                })()}
+              </span>
             </span>
             {d.ordine_id ? <span className="etichetta arancio">In viaggio</span> : <span className="tenue" aria-hidden="true">›</span>}
           </Link>
@@ -113,7 +123,7 @@ export function NuovoDesiderio() {
             await nuoviDesideri([{
               ...r, carta_id: c.id, lingua, nome: c.nome, set_id: c.setId,
               set_nome: d.setNome ?? cat.setPerId.get(c.setId)?.nome ?? null, numero: c.numero,
-              immagine: c.immagine || d.immagine, cardmarket_id: d.cardmarketId,
+              immagine: c.immagine || d.immagine, cardmarket_id: d.cardmarketId, tcgplayer_id: d.tcgplayerId,
             }])
             await ricarica()
             navigate('/wantlist', { replace: true })
@@ -181,6 +191,10 @@ export function DesiderioVista() {
             {d.note && <span className="tenue" style={{ whiteSpace: 'pre-line' }}>{d.note}</span>}
           </div>
           {errore && <div className="avviso errore">{errore}</div>}
+
+          <ValoreCarta cm={d.cardmarket_id} tp={d.tcgplayer_id} variante={d.variante} lingua={d.lingua} nome={d.nome} numero={d.numero} setId={d.set_id}
+            prezzoMax={d.prezzo_max}
+            onTcgplayer={async (tp) => { try { await aggiornaDesiderio(d.id, { tcgplayer_id: tp }); await ricarica() } catch (e) { setErrore((e as Error).message) } }} />
 
           <section className="scheda">
             <h2>Cerca sui siti</h2>

@@ -22,6 +22,10 @@ App personale per il collezionismo (non per il commercio) di carte Pokémon, su 
 
 - Catalogo: TCGdex (nomi, set, numeri, immagini, collegamento al prodotto Cardmarket).
 - Prezzi automatici ogni giorno: file pubblici di Cardmarket (un prezzo per prodotto; le carte giapponesi sono prodotti separati) e TCGplayer tramite TCGCSV (anche la categoria giapponese, Vending comprese). Cambi dalla BCE.
+- Valore principale di una carta: tendenza Cardmarket; per prima edizione e Shadowless, che Cardmarket non separa, il prezzo di mercato TCGplayer convertito in euro. Sotto ogni miniatura, con freccia (media 7 giorni rispetto a 30). Nessun totale.
+- Storico: salvato ogni notte nel database solo per le carte seguite (collezione, in viaggio, wantlist); i grafici partono dal primo giorno.
+- Carte giapponesi su TCGplayer: abbinate da sole per set e numero; se ci sono più candidati si sceglie nella scheda.
+- Mercato interno giapponese (Pokecazilla) e PriceCharting: letture dal browser interno, tappa 4.
 - Prezzi per lingua, condizione, gradate e aste: dalle letture fatte nel browser interno quando cerchi o apri una carta.
 - Nessun accesso automatico in background ai siti (niente scraping): l'app legge solo le pagine che apre l'utente.
 - Immagini, catena di fonti: TCGdex, Limitless, database ufficiale giapponese, TCGplayer, TCG Collector, foto dell'utente.

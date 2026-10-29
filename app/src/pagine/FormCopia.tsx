@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useArchivio } from '../archivio'
 import { nuovaPosizione } from '../dati'
 import type { Copia, Stato } from '../tipi'
-import { CONDIZIONI, STATI, VARIANTI } from '../tipi'
+import { CONDIZIONI, STATI, VARIANTI, oggiLocale } from '../tipi'
 
 export type ValoriCopia = Pick<Copia,
   'stato' | 'condizione' | 'variante' | 'gradata' | 'ente' | 'voto' | 'certificato' | 'protezione' |
@@ -11,7 +11,7 @@ export type ValoriCopia = Pick<Copia,
 export const VALORI_INIZIALI: ValoriCopia = {
   stato: 'collezione', condizione: 'NM', variante: null, gradata: false, ente: null, voto: null, certificato: null,
   protezione: 'Doppia bustina e toploader', posizione_id: null, pagina: null, prezzo_pagato: null,
-  data_arrivo: new Date().toISOString().slice(0, 10), note: null,
+  data_arrivo: oggiLocale(), note: null,
 }
 
 export function soloValori(c: ValoriCopia): ValoriCopia {

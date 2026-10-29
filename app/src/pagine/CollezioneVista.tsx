@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { copieDi, useArchivio } from '../archivio'
 import { caricaCatalogo, type CartaCatalogo } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, ImmagineCopia, Indietro } from '../comuni'
+import { PrezzoBreve } from './Valore'
 import { collega, eliminaCollezione, nuoviDesideri } from '../dati'
 import { LINGUE } from '../tipi'
 import { GrigliaCopie } from './TutteLeCarte'
@@ -103,6 +104,7 @@ export function CollezioneVista() {
               <>
                 {m ? <ImmagineCopia copia={m} /> : <span className="mancante"><ImmagineCarta immagine={c.immagine} lingua={col.lingua!} setId={c.setId} numero={c.numero} alt={c.nome} /></span>}
                 <span className={`piccolo taglia ${col.lingua === 'ja' ? 'jp' : ''}`} style={{ fontWeight: m ? 600 : 400 }}>{c.numero} · {c.nome}</span>
+                {m && <PrezzoBreve cm={m.cardmarket_id} tp={m.tcgplayer_id} variante={m.variante} />}
                 {m ? <span className="piccolo" style={{ color: 'var(--verde)' }}>Posseduta</span>
                   : inWantlist.has(c.id) ? <span className="piccolo" style={{ color: 'var(--accento)' }}>In wantlist</span>
                   : <button type="button" className="btn" style={{ minHeight: 40, fontSize: 13, padding: '0 6px' }} onClick={() => void aggiungiWantlist([c])}>+ Wantlist</button>}

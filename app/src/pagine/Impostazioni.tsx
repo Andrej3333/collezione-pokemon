@@ -6,7 +6,7 @@ import { statoVoce } from '../importazione'
 import { supabase } from '../supabase'
 
 export function Impostazioni() {
-  const { posizioni, copie, voci, ricarica } = useArchivio()
+  const { posizioni, copie, voci, prezzi, ricarica } = useArchivio()
   const [email, setEmail] = useState('')
   const [nuova, setNuova] = useState('')
   const [errore, setErrore] = useState<string | null>(null)
@@ -61,12 +61,20 @@ export function Impostazioni() {
       </section>
 
       <section className="scheda">
+        <h2>Prezzi</h2>
+        <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>
+          Cardmarket e TCGplayer, per le carte in collezione, in viaggio e in wantlist. Si aggiornano ogni notte.{' '}
+          {prezzi.aggiornato ? `Ultimo aggiornamento: ${new Date(prezzi.aggiornato).toLocaleString('it-IT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}.` : 'Nessun aggiornamento ancora.'}
+        </span>
+      </section>
+
+      <section className="scheda">
         <h2>Account</h2>
         <span className="tenue">{email}</span>
         <button type="button" className="btn" onClick={() => void supabase.auth.signOut()}>Esci</button>
       </section>
 
-      <span className="tenue piccolo">Versione 0.2, tappa 2. In arrivo: scale di condizione, siti per la ricerca, proxy e cambi.</span>
+      <span className="tenue piccolo">Versione 0.3, tappa 3. In arrivo: app per Android e Windows con il browser interno.</span>
     </main>
   )
 }
