@@ -1,0 +1,5 @@
+# Esecuzioni
+
+Una riga per ogni volta che la verifica gira.
+
+- 2026-10-29 15:49 UTC, avvio: push
