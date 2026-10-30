@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useArchivio } from '../archivio'
-import { caricaCatalogo, confrontaNumeri, logoSet, normalizza, type Catalogo, type CartaCatalogo, type SetCatalogo } from '../catalogo'
+import { caricaCatalogo, logoSet, normalizza, unisciCarteSet, type Catalogo, type CartaCatalogo, type SetCatalogo } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, Indietro } from '../comuni'
 import { nuovaCollezione, nuoviDesideri } from '../dati'
 import type { Lingua } from '../tipi'
@@ -109,7 +109,7 @@ export function SetVista() {
 
   const cat = cats[lingua]
   const set = cat?.setPerId.get(id)
-  const carte = useMemo(() => (cat ? cat.carte.filter((c) => c.setId === id).sort((a, b) => confrontaNumeri(a.numero, b.numero)) : []), [cat, id])
+  const carte = useMemo(() => (cat ? unisciCarteSet(cat, cats.en, id) : []), [cat, cats.en, id])
 
   if (!caricato || (!cat && !erroreCat)) return <main className="pagina"><Attesa /></main>
   if (!cat || !set) return <main className="pagina"><Indietro to="/set">Esplora i set</Indietro><div className="vuoto">{erroreCat ? `Catalogo non disponibile: ${erroreCat}` : 'Set non trovato.'}</div></main>
@@ -218,7 +218,7 @@ export function SetVista() {
       {elenco.length === 0 && <div className="vuoto">Nessuna carta con questi filtri.</div>}
 
       {selezione && (
-        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 'calc(64px + env(safe-area-inset-bottom))', padding: '10px 16px', background: 'var(--superficie)', borderTop: '1px solid var(--bordo)', zIndex: 5 }}>
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 'calc(64px + var(--sotto))', padding: '10px 16px', background: 'var(--superficie)', borderTop: '1px solid var(--bordo)', zIndex: 5 }}>
           <div className="riga" style={{ gap: 8, maxWidth: 900, margin: '0 auto' }}>
             <button type="button" className="btn" onClick={() => setSelezione(new Set(elenco.filter((c) => !perCarta.has(c.id) && !inWantlist.has(c.id)).map((c) => c.id)))}>Tutte le mancanti</button>
             <button type="button" className="btn primario" style={{ flex: 1 }} disabled={occupato || selezione.size === 0}

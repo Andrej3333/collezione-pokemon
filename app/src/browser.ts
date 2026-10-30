@@ -136,6 +136,7 @@ export async function apri(url: string, titolo?: string): Promise<void> {
     toolbarType: ToolBarType.NAVIGATION,
     showReloadButton: true,
     enabledSafeBottomMargin: true, // la pagina non finisce sotto i tasti di Android
+    activeNativeNavigationForWebview: true, // il tasto indietro torna alla pagina precedente del sito
     toolbarColor: '#181b21',
     toolbarTextColor: '#e8eaed',
   })

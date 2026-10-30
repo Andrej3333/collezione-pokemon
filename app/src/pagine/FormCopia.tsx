@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { useArchivio } from '../archivio'
 import { nuovaPosizione } from '../dati'
-import type { Copia, Stato } from '../tipi'
+import type { Copia, Lingua, Stato } from '../tipi'
 import { CONDIZIONI, STATI, VARIANTI, oggiLocale } from '../tipi'
 
 export type ValoriCopia = Pick<Copia,
   'stato' | 'condizione' | 'variante' | 'gradata' | 'ente' | 'voto' | 'certificato' | 'protezione' |
-  'posizione_id' | 'pagina' | 'prezzo_pagato' | 'data_arrivo' | 'note' | 'prezzo_vendita' | 'data_vendita'>
+  'posizione_id' | 'pagina' | 'prezzo_pagato' | 'data_arrivo' | 'note' | 'prezzo_vendita' | 'data_vendita' | 'lingua'>
 
 export const VALORI_INIZIALI: ValoriCopia = {
   stato: 'collezione', condizione: 'NM', variante: null, gradata: false, ente: null, voto: null, certificato: null,
   protezione: 'Doppia bustina e toploader', posizione_id: null, pagina: null, prezzo_pagato: null,
-  data_arrivo: oggiLocale(), note: null, prezzo_vendita: null, data_vendita: null,
+  data_arrivo: oggiLocale(), note: null, prezzo_vendita: null, data_vendita: null, lingua: 'en',
 }
 
 export function soloValori(c: ValoriCopia): ValoriCopia {
@@ -27,6 +27,7 @@ export function FormCopia(props: {
   collezioniIniziali: string[]
   etichettaSalva: string
   conQuantita?: boolean
+  lingue?: Lingua[] // lingue tra cui si può scegliere (inglese e italiano hanno le stesse carte)
   onSalva: (v: ValoriCopia, collezioni: string[], quantita: number) => Promise<void>
 }) {
   const { collezioni, posizioni, ricarica } = useArchivio()
@@ -81,6 +82,19 @@ export function FormCopia(props: {
           <label className="campo">Venduta il
             <input type="date" value={v.data_vendita ?? ''} onChange={(e) => set('data_vendita', e.target.value || null)} />
           </label>
+        </div>
+      )}
+
+      {props.lingue && props.lingue.length > 1 && (
+        <div className="colonna" style={{ gap: 6 }}>
+          <span style={{ fontSize: 14, color: 'var(--testo2)' }}>Lingua della tua copia</span>
+          <div className="chips" role="group" aria-label="Lingua della copia">
+            {props.lingue.map((l) => (
+              <button key={l} type="button" className={`chip ${v.lingua === l ? 'attivo' : ''}`} aria-pressed={v.lingua === l} onClick={() => set('lingua', l)}>
+                {l === 'en' ? 'Inglese' : l === 'it' ? 'Italiano' : 'Giapponese'}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

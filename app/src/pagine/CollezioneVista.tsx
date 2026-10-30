@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { copieDi, useArchivio } from '../archivio'
-import { caricaCatalogo, type CartaCatalogo } from '../catalogo'
+import { carteDelSet, type CartaCatalogo } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, ImmagineCopia, Indietro } from '../comuni'
 import { PrezzoBreve } from './Valore'
 import { collega, eliminaCollezione, nuoviDesideri } from '../dati'
@@ -20,10 +20,10 @@ export function CollezioneVista() {
 
   useEffect(() => {
     if (!col || col.tipo !== 'set' || !col.lingua) return
-    caricaCatalogo(col.lingua).then(
-      (cat) => {
+    carteDelSet(col.lingua, col.set_id ?? '').then(
+      (carte) => {
         const pre = (col.regole?.prefisso || '').toUpperCase()
-        setCarteSet(cat.carte.filter((c) => c.setId === col.set_id && (!pre || c.numero.toUpperCase().startsWith(pre))))
+        setCarteSet(carte.filter((c) => !pre || c.numero.toUpperCase().startsWith(pre)))
       },
       (e) => setErrore((e as Error).message))
   }, [col])

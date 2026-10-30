@@ -261,3 +261,36 @@ export function indirizziImmagine(opz: {
   }
   return out
 }
+
+// Nome, set e immagine della stessa carta in un'altra lingua (inglese e italiano condividono il codice).
+export async function cartaInLingua(cartaId: string, lingua: Lingua): Promise<{ nome: string; set_nome: string | null; immagine: string | null } | null> {
+  try {
+    const cat = await caricaCatalogo(lingua)
+    const c = cat.carte.find((x) => x.id === cartaId)
+    const s = cat.setPerId.get(setIdDi(cartaId))
+    if (!c && !s) return null
+    return { nome: c?.nome ?? '', set_nome: s?.nome ?? null, immagine: c?.immagine || null }
+  } catch {
+    return null
+  }
+}
+
+// Le carte di un set. Il catalogo italiano a volte ne ha meno di quello inglese: in quel caso
+// uso l'elenco inglese (stessi codici e numeri) con nomi e immagini italiani dove ci sono.
+export function unisciCarteSet(proprio: Catalogo, inglese: Catalogo | undefined, setId: string): CartaCatalogo[] {
+  const proprie = proprio.carte.filter((c) => c.setId === setId)
+  if (proprio.lingua !== 'it' || !inglese) return proprie.sort((a, b) => confrontaNumeri(a.numero, b.numero))
+  const inglesi = inglese.carte.filter((c) => c.setId === setId)
+  if (inglesi.length <= proprie.length) return proprie.sort((a, b) => confrontaNumeri(a.numero, b.numero))
+  const perId = new Map(proprie.map((c) => [c.id, c]))
+  return inglesi.map((c) => {
+    const it = perId.get(c.id)
+    return it ? { ...it, immagine: it.immagine || c.immagine } : c
+  }).sort((a, b) => confrontaNumeri(a.numero, b.numero))
+}
+
+export async function carteDelSet(lingua: Lingua, setId: string): Promise<CartaCatalogo[]> {
+  const proprio = await caricaCatalogo(lingua)
+  const inglese = lingua === 'it' ? await caricaCatalogo('en').catch(() => undefined) : undefined
+  return unisciCarteSet(proprio, inglese, setId)
+}

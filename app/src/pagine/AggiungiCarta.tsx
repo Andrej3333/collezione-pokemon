@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useArchivio } from '../archivio'
-import { caricaCatalogo, dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
+import { caricaCatalogo, cartaInLingua, dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
 import { breveLingua, ImmagineCopia, Indietro } from '../comuni'
 import { collega, nuovaCopia } from '../dati'
 import type { Copia, Lingua } from '../tipi'
@@ -63,12 +63,13 @@ export function AggiungiCarta() {
           </span>
         </div>
         <span className="tenue piccolo">Ho ripreso i dati della copia che stavi guardando: cambia quello che è diverso.</span>
-        <FormCopia iniziali={iniziali} variantiSuggerite={m.variante ? [m.variante] : []} collezioniIniziali={[]} etichettaSalva="Aggiungi la copia" conQuantita
+        <FormCopia iniziali={iniziali} variantiSuggerite={m.variante ? [m.variante] : []} lingue={m.lingua === 'ja' ? undefined : ['en', 'it']} collezioniIniziali={[]} etichettaSalva="Aggiungi la copia" conQuantita
           onSalva={async (v, collezioni, quantita) => {
             const copia = await creaCopie({
               ...v,
-              carta_id: m.carta_id, lingua: m.lingua, nome: m.nome, set_id: m.set_id, set_nome: m.set_nome, numero: m.numero,
-              rarita: m.rarita, illustratore: m.illustratore, immagine: m.immagine, cardmarket_id: m.cardmarket_id, tcgplayer_id: m.tcgplayer_id,
+              carta_id: m.carta_id, nome: m.nome, set_id: m.set_id, set_nome: m.set_nome, numero: m.numero,
+              rarita: m.rarita, illustratore: m.illustratore, immagine: m.immagine,
+              ...(v.lingua !== m.lingua ? await (async () => { const a = await cartaInLingua(m.carta_id, v.lingua); return a ? { nome: a.nome || m.nome, set_nome: a.set_nome ?? m.set_nome, immagine: a.immagine || m.immagine } : {} })() : {}), cardmarket_id: m.cardmarket_id, tcgplayer_id: m.tcgplayer_id,
             }, quantita, collezioni)
             await ricarica()
             navigate(`/carta/${copia.id}`, { replace: true })
@@ -84,15 +85,18 @@ export function AggiungiCarta() {
       <main className="pagina" style={{ maxWidth: 720 }}>
         <button type="button" className="indietro btn" style={{ border: 0, background: 'transparent', padding: 0, color: 'var(--accento)' }} onClick={() => setScelta(null)}>‹ Torna alla ricerca</button>
         <CartaScelta c={c} lingua={lingua} cat={cat} />
-        <FormCopia iniziali={{ ...VALORI_INIZIALI, variante: det?.varianti[0] ?? null }} key={det ? 'pronto' : 'attesa'}
+        <FormCopia iniziali={{ ...VALORI_INIZIALI, lingua, variante: det?.varianti[0] ?? null }} key={det ? 'pronto' : 'attesa'}
+          lingue={lingua === 'ja' ? undefined : ['en', 'it']}
           variantiSuggerite={det?.varianti ?? []} collezioniIniziali={[]} etichettaSalva="Aggiungi alla collezione" conQuantita
           onSalva={async (v, collezioni, quantita) => {
             const d = det ?? await dettaglio(lingua, c.id)
+            // copia in un'altra lingua: nome, set e immagine di quella lingua, se il catalogo li ha
+            const altra = v.lingua !== lingua ? await cartaInLingua(c.id, v.lingua) : null
             const copia = await creaCopie({
               ...v,
-              carta_id: c.id, lingua, nome: c.nome, set_id: c.setId,
-              set_nome: d.setNome ?? set?.nome ?? null, numero: c.numero,
-              rarita: d.rarita, illustratore: d.illustratore, immagine: c.immagine || d.immagine,
+              carta_id: c.id, lingua: v.lingua, nome: altra?.nome || c.nome, set_id: c.setId,
+              set_nome: altra?.set_nome ?? d.setNome ?? set?.nome ?? null, numero: c.numero,
+              rarita: d.rarita, illustratore: d.illustratore, immagine: altra?.immagine || c.immagine || d.immagine,
               cardmarket_id: cmParam ? Number(cmParam) : d.cardmarketId, tcgplayer_id: d.tcgplayerId,
             }, quantita, collezioni)
             await ricarica()

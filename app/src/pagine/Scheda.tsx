@@ -4,6 +4,7 @@ import { copieDi, useArchivio } from '../archivio'
 import { Attesa, EtichettaStato, ImmagineCopia, Indietro } from '../comuni'
 import { aggiornaCopia, caricaFoto, collega, eliminaCopia, scollega } from '../dati'
 import { CONDIZIONI, LINGUE, oggiLocale } from '../tipi'
+import { cartaInLingua } from '../catalogo'
 import { breveLingua } from '../comuni'
 import { FormCopia, soloValori } from './FormCopia'
 import { ValoreCarta } from './Valore'
@@ -52,8 +53,10 @@ export function Scheda() {
         <button type="button" className="indietro btn" style={{ border: 0, background: 'transparent', padding: 0, color: 'var(--accento)' }} onClick={() => setModifica(false)}>‹ Annulla</button>
         <h1>Modifica: {c.nome}</h1>
         <FormCopia iniziali={soloValori(c)} collezioniIniziali={manualiDi} etichettaSalva="Salva le modifiche"
+          lingue={c.lingua === 'ja' ? undefined : ['en', 'it']}
           onSalva={async (v, scelte) => {
-            await aggiornaCopia(c.id, v)
+            const altra = v.lingua !== c.lingua ? await cartaInLingua(c.carta_id, v.lingua) : null
+            await aggiornaCopia(c.id, { ...v, ...(altra ? { nome: altra.nome || c.nome, set_nome: altra.set_nome ?? c.set_nome, immagine: altra.immagine || c.immagine } : {}) })
             for (const col of manuali) {
               const era = manualiDi.includes(col.id)
               const ora = scelte.includes(col.id)

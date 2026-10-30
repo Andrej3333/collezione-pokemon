@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.6.0",
     "@capgo/capacitor-inappbrowser": "^8.27.0",
     "@supabase/supabase-js": "^2.118.0",

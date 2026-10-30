@@ -1,4 +1,7 @@
 :root {
+  /* spazi dei bordi del telefono (barra di stato, tasti di Android): li dà Capacitor, altrimenti il browser */
+  --sopra: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --sotto: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
   --fondo: #0f1115;
   --superficie: #181b21;
   --superficie2: #20242c;
@@ -33,17 +36,17 @@ h2 { margin: 0; font-size: 17px; font-weight: 600; }
 .piccolo { font-size: 13px; }
 .taglia { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
-.testata { background: var(--superficie); border-bottom: 1px solid var(--bordo); padding: 6px clamp(14px, 3vw, 40px); }
+.testata { background: var(--superficie); border-bottom: 1px solid var(--bordo); padding: calc(6px + var(--sopra)) clamp(14px, 3vw, 40px) 6px; }
 .testata > div { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .testata .marchio { font-weight: 600; font-size: 17px; }
 
-.pagina { max-width: 1200px; margin: 0 auto; padding: 16px clamp(14px, 3vw, 40px) 96px; display: flex; flex-direction: column; gap: 16px; }
+.pagina { max-width: 1200px; margin: 0 auto; padding: 16px clamp(14px, 3vw, 40px) calc(96px + var(--sotto)); display: flex; flex-direction: column; gap: 16px; }
 .riga { display: flex; align-items: center; gap: 12px; }
 .riga.tra { justify-content: space-between; }
 .riga.a-capo { flex-wrap: wrap; }
 .colonna { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 
-.menu { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--superficie); border-top: 1px solid var(--bordo); padding-bottom: env(safe-area-inset-bottom); }
+.menu { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--superficie); border-top: 1px solid var(--bordo); padding-bottom: var(--sotto); }
 .menu > div { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .menu a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; height: 64px; font-size: 12px; color: var(--tenue); }
 .menu a.attivo { color: var(--accento-attivo); font-weight: 600; }
@@ -100,4 +103,4 @@ h2 { margin: 0; font-size: 17px; font-weight: 600; }
 .dati .lbl { color: var(--tenue); font-size: 13px; }
 .vuoto { padding: 28px 16px; text-align: center; color: var(--tenue); border: 1px dashed var(--bordo2); border-radius: 12px; line-height: 1.6; }
 .foglio-sfondo { position: fixed; inset: 0; background: rgba(0, 0, 0, .6); z-index: 20; display: flex; align-items: flex-end; justify-content: center; }
-.foglio { background: var(--superficie); border-radius: 16px 16px 0 0; width: 100%; max-width: 640px; max-height: 85vh; overflow-y: auto; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
+.foglio { background: var(--superficie); border-radius: 16px 16px 0 0; width: 100%; max-width: 640px; max-height: calc(88vh - var(--sopra)); overflow-y: auto; padding: 16px 16px calc(16px + var(--sotto)); display: flex; flex-direction: column; gap: 12px; }
