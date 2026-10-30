@@ -1,6 +1,6 @@
 # Catalogo
 
-Generato: 2026-10-30 04:05 UTC
+Generato: 2026-10-30 04:15 UTC
 
 - nomi delle specie da PokeAPI: 1025 nomi giapponesi
 - nomi inglesi dei set giapponesi da TCGplayer: 282
