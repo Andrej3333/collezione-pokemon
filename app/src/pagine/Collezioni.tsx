@@ -47,6 +47,11 @@ export function Collezioni() {
         <span className="tenue" aria-hidden="true">›</span>
       </Link>
 
+      <Link className="voce" to="/set" style={{ justifyContent: 'space-between' }}>
+        <span>Esplora i set</span>
+        <span className="tenue piccolo">inglesi, italiani, giapponesi ›</span>
+      </Link>
+
       <Link className="voce" to="/vendute" style={{ justifyContent: 'space-between' }}>
         <span>Vendute</span>
         <span className="tenue piccolo">{conta(vendute.length)} ›</span>

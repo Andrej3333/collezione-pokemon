@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useArchivio } from '../archivio'
-import { dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
+import { caricaCatalogo, dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, Indietro } from '../comuni'
 import { aggiornaDesiderio, eliminaDesiderio, nuoviDesideri } from '../dati'
 import { linkRicerca } from '../ricerca'
@@ -109,6 +109,16 @@ export function NuovoDesiderio() {
   const [scelta, setScelta] = useState<{ c: CartaCatalogo; lingua: Lingua; cat: Catalogo } | null>(null)
   const [det, setDet] = useState<Dettaglio | null>(null)
   useEffect(() => { setDet(null); if (scelta) void dettaglio(scelta.lingua, scelta.c.id).then(setDet) }, [scelta])
+  const [params] = useSearchParams()
+  const cartaParam = params.get('carta')
+  const linguaParam = params.get('lingua') as Lingua | null
+  useEffect(() => {
+    if (!cartaParam || !linguaParam) return
+    void caricaCatalogo(linguaParam).then((cat) => {
+      const c = cat.carte.find((x) => x.id === cartaParam)
+      if (c) setScelta({ c, lingua: linguaParam, cat })
+    })
+  }, [cartaParam, linguaParam])
 
   if (scelta) {
     const { c, lingua, cat } = scelta
@@ -135,7 +145,7 @@ export function NuovoDesiderio() {
     <main className="pagina">
       <Indietro to="/wantlist">Wantlist</Indietro>
       <h1>Aggiungi alla wantlist</h1>
-      <CercaCarta onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
+      <CercaCarta mostraSet onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
     </main>
   )
 }
@@ -186,7 +196,7 @@ export function DesiderioVista() {
           <div className="colonna" style={{ gap: 6 }}>
             {ordine && <span className="etichetta arancio">In viaggio</span>}
             <h1 className={d.lingua === 'ja' ? 'jp' : ''} style={{ fontSize: 26 }}>{d.nome}</h1>
-            <span className="tenue">{[d.set_nome || d.set_id, d.numero, breveLingua(d.lingua)].join(' · ')}</span>
+            <span className="tenue"><Link to={`/set/${d.lingua}/${encodeURIComponent(d.set_id)}`}>{d.set_nome || d.set_id}</Link> · {d.numero} · {breveLingua(d.lingua)}</span>
             {requisiti(d) && <span style={{ color: 'var(--testo2)' }}>Cerchi: {requisiti(d)}</span>}
             {d.note && <span className="tenue" style={{ whiteSpace: 'pre-line' }}>{d.note}</span>}
           </div>

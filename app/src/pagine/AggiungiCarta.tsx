@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useArchivio } from '../archivio'
-import { dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
+import { caricaCatalogo, dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
 import { breveLingua, ImmagineCopia, Indietro } from '../comuni'
 import { collega, nuovaCopia } from '../dati'
 import type { Copia, Lingua } from '../tipi'
@@ -32,6 +32,17 @@ export function AggiungiCarta() {
     setDet(null)
     if (scelta) void dettaglio(scelta.lingua, scelta.c.id).then(setDet)
   }, [scelta])
+
+  // arrivo dalla pagina di un set: carta già scelta
+  const cartaParam = params.get('carta')
+  const linguaParam = params.get('lingua') as Lingua | null
+  useEffect(() => {
+    if (!cartaParam || !linguaParam) return
+    void caricaCatalogo(linguaParam).then((cat) => {
+      const c = cat.carte.find((x) => x.id === cartaParam)
+      if (c) setScelta({ c, lingua: linguaParam, cat })
+    })
+  }, [cartaParam, linguaParam])
 
   if (modello && !scelta) {
     const m = modello
@@ -94,7 +105,7 @@ export function AggiungiCarta() {
     <main className="pagina">
       <Indietro to="/carte">Tutte le carte</Indietro>
       <h1>Aggiungi carta</h1>
-      <CercaCarta onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
+      <CercaCarta mostraSet onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
     </main>
   )
 }

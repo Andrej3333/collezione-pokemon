@@ -89,7 +89,8 @@ export function Scheda() {
             <EtichettaStato stato={c.stato} />
             <h1 className={c.lingua === 'ja' ? 'jp' : ''} style={{ fontSize: 26 }}>{c.nome}</h1>
             <span className="tenue" style={{ lineHeight: 1.5 }}>
-              {[c.set_nome || c.set_id, c.numero, c.rarita, lingua, c.variante].filter(Boolean).join(' · ')}
+              <Link to={`/set/${c.lingua}/${encodeURIComponent(c.set_id)}`}>{c.set_nome || c.set_id}</Link>
+              {' · '}{[c.numero, c.rarita, lingua, c.variante].filter(Boolean).join(' · ')}
             </span>
           </div>
           {errore && <div className="avviso errore">{errore}</div>}
