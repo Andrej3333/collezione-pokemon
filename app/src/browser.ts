@@ -52,6 +52,7 @@ const CHIAVE = Math.random().toString(36).slice(2) + Date.now().toString(36)
 function iniettore(): string {
   return `(function () {
   if (!${SITI_DA_LEGGERE}.test(location.hostname) || !document.body) return;
+  if (!/\\/Products\\/Singles\\//i.test(location.pathname)) return; // solo pagine di una carta
   if (document.querySelector('button[data-collezione]')) return;
   var b = document.createElement('button');
   b.setAttribute('data-collezione', '1');
@@ -66,6 +67,8 @@ function iniettore(): string {
     c.querySelectorAll('script,style,noscript,svg,iframe,link,meta,header,nav,footer,input,textarea,select,[data-collezione],[class*="account" i],[id*="account" i],[class*="login" i],[class*="cart" i],[id*="cart" i],[class*="cookie" i],[class*="navbar" i]').forEach(function (e) { e.remove(); });
     var tieni = /^(class|id|href|title|alt|src|aria-label|colspan|data-[a-z0-9-]+)$/i;
     c.querySelectorAll('*').forEach(function (e) { Array.prototype.slice.call(e.attributes).forEach(function (a) { if (!tieni.test(a.name)) e.removeAttribute(a.name); }); });
+    var testo = (c.textContent || '').replace(/\\s+/g, ' ');
+    if (testo.length < 400 || testo.indexOf('€') < 0) { b.textContent = 'Pagina non ancora caricata, riprova'; setTimeout(function () { b.textContent = 'Invia esempio'; }, 3000); return; }
     var html = c.innerHTML.replace(/\\s+/g, ' ');
     if (html.length > 600000) html = html.slice(0, 600000);
     window.mobileApp.postMessage({ detail: { tipo: 'campione', chiave: '${CHIAVE}', url: location.href, titolo: document.title, html: html } });
@@ -84,7 +87,7 @@ function iniettore(): string {
     if (d.tipo === 'campione-ricevuto') { b.textContent = 'Salvataggio…'; return; }
     if (d.tipo !== 'campione-salvato') return;
     clearTimeout(window.__collezioneAttesa);
-    b.textContent = d.ok ? 'Esempio salvato ✓' : 'Non salvato: ' + (d.errore || 'errore');
+    b.textContent = d.ok ? 'Salvato ✓ (in Impostazioni)' : 'Non salvato: ' + (d.errore || 'errore');
     setTimeout(function () { b.textContent = 'Invia esempio'; }, 3500);
   });
   document.body.appendChild(b);
