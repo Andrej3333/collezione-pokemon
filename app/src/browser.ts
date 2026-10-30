@@ -56,8 +56,10 @@ function iniettore(): string {
   var b = document.createElement('button');
   b.setAttribute('data-collezione', '1');
   b.textContent = 'Invia esempio';
-  b.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:10px 16px;border-radius:20px;border:0;background:#3d63f2;color:#fff;font:600 14px sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.45)';
-  b.onclick = function () {
+  b.style.cssText = 'position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom, 0px) + 96px);touch-action:manipulation;z-index:2147483647;padding:10px 16px;border-radius:20px;border:0;background:#3d63f2;color:#fff;font:600 14px sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.45)';
+  var invia = function (ev) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    if (b.textContent === 'Invio…') return;
     if (!window.mobileApp) { b.textContent = 'Collegamento non pronto, riprova'; return; }
     b.textContent = 'Invio…';
     var c = document.body.cloneNode(true);
@@ -68,6 +70,8 @@ function iniettore(): string {
     if (html.length > 600000) html = html.slice(0, 600000);
     window.mobileApp.postMessage({ tipo: 'campione', chiave: '${CHIAVE}', url: location.href, titolo: document.title, html: html });
   };
+  b.addEventListener('touchend', invia, { passive: false });
+  b.addEventListener('click', invia);
   if (window.__collezioneAscolto) { document.body.appendChild(b); return; }
   window.__collezioneAscolto = true;
   window.addEventListener('messageFromNative', function (e) {
@@ -135,6 +139,7 @@ export async function apri(url: string, titolo?: string): Promise<void> {
     title: titolo ?? '',
     toolbarType: ToolBarType.NAVIGATION,
     showReloadButton: true,
+    enabledSafeBottomMargin: true, // la pagina non finisce sotto i tasti di Android
     toolbarColor: '#181b21',
     toolbarTextColor: '#e8eaed',
   })
