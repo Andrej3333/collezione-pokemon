@@ -1,6 +1,6 @@
 # Resoconto verifica fonti
 
-Eseguito: 2026-10-29 16:04 UTC, avvio: push
+Eseguito: 2026-10-30 11:24 UTC, avvio: schedule
 
 ## 1. TCGdex (catalogo e immagini)
 
@@ -12,20 +12,20 @@ Eseguito: 2026-10-29 16:04 UTC, avvio: push
 
 - carta **swsh3-136** (Furret): campi = category, id, illustrator, image, localId, name, rarity, set, variants, variants_detailed, dexId, hp, types, evolveFrom, description, stage, attacks, weaknesses, retreat, regulationMark, legal, updated, pricing
   - `pricing` presente, sotto-campi: cardmarket, tcgplayer
-  - `pricing.cardmarket`: {"updated": "2026-10-28T22:54:32.785Z", "unit": "EUR", "idProduct": 483559, "avg": 0.06, "low": 0.02, "trend": 0.04, "avg1": 0.02, "avg7": 0.05, "avg30": 0.06, "avg-holo": 0.22, "low-holo": 0.08, "trend-holo": 0.23, "avg1-holo": 0.18, "avg7-holo": 0.23, "avg30-holo": 0.24}
+  - `pricing.cardmarket`: {"updated": "2026-10-29T22:54:33.163Z", "unit": "EUR", "idProduct": 483559, "avg": 0.06, "low": 0.02, "trend": 0.04, "avg1": 0.02, "avg7": 0.05, "avg30": 0.06, "avg-holo": 0.22, "low-holo": 0.08, "trend-holo": 0.23, "avg1-holo": 0.18, "avg7-holo": 0.23, "avg30-holo": 0.24}
   - `pricing.tcgplayer`: {"unit": "USD", "updated": "2026-10-14T22:55:05.165Z", "normal": {"productId": 219333, "lowPrice": 0.02, "midPrice": 0.25, "highPrice": 25.27, "marketPrice": 0.27, "directLowPrice": null}, "reverse-holofoil": {"productId": 219333, "lowPrice": 0.17, "midPrice": 0.43, "highPrice": 19.8, "marketPrice": 0.44, "directLowPrice": 0.37}}
 - carta **g1-RC32** (Sylveon EX): campi = category, id, illustrator, image, localId, name, rarity, set, variants, variants_detailed, dexId, cameoDexIds, hp, types, suffix, attacks, weaknesses, resistances, retreat, legal, updated, thirdParty, pricing
   - `pricing` presente, sotto-campi: cardmarket, tcgplayer
-  - `pricing.cardmarket`: {"updated": "2026-10-28T22:54:32.803Z", "unit": "EUR", "idProduct": 288530, "avg": 42.46, "low": 19.88, "trend": 36.75, "avg1": 45, "avg7": 41.19, "avg30": 42.85, "avg-holo": null, "low-holo": null, "trend-holo": 7.07, "avg1-holo": 3.99, "avg7-holo": 7.23, "avg30-holo": 7.12}
+  - `pricing.cardmarket`: {"updated": "2026-10-29T22:54:33.163Z", "unit": "EUR", "idProduct": 288530, "avg": 42.46, "low": 19.88, "trend": 36.75, "avg1": 45, "avg7": 41.19, "avg30": 42.85, "avg-holo": null, "low-holo": null, "trend-holo": 7.07, "avg1-holo": 3.99, "avg7-holo": 7.23, "avg30-holo": 7.12}
   - `pricing.tcgplayer`: null
 
 ## 2. Cardmarket (file pubblici)
 
 - **prezzi**: scaricato, 15.8 MB
   - campi principali: version, createdAt, priceGuides
-  - createdAt: 2026-10-29T02:52:59+0100
+  - createdAt: 2026-10-30T02:47:31+0100
   - version: 1
-  - `priceGuides`: 80170 elementi
+  - `priceGuides`: 80173 elementi
   - esempio di elemento: `{"idProduct": 271439, "idCategory": 52, "avg": 174.5, "low": 150, "trend": 270.03, "avg1": null, "avg7": null, "avg30": null, "avg-holo": null, "low-holo": null, "trend-holo": 3.93, "avg1-holo": null, "avg7-holo": null, "avg30-holo": null}`
 - **prodotti singole**: scaricato, 13.8 MB
   - campi principali: version, createdAt, products
@@ -42,7 +42,8 @@ Eseguito: 2026-10-29 16:04 UTC, avvio: push
 
 ## 3. pokemontcg.io (prezzi TCGplayer e Cardmarket)
 
-- non raggiungibile (stato 500, HTTP Error 500: Internal Server Error)
+- `tcgplayer`: aggiornato 2026/10/15, prezzi: {"normal": {"low": 0.02, "mid": 0.25, "high": 25.27, "market": 0.27, "directLow": null}, "reverseHolofoil": {"low": 0.17, "mid": 0.43, "high": 19.8, "market": 0.44, "directLow": 0.37}}
+- `cardmarket`: aggiornato 2025/11/21, prezzi: {"averageSellPrice": 0.11, "lowPrice": 0.02, "trendPrice": 0.11, "germanProLow": 0.0, "suggestedPrice": 0.0, "reverseHoloSell": 0.27, "reverseHoloLow": 0.03, "reverseHoloTrend": 0.23, "lowPriceExPlus": 0.02, "avg1": 0.03, "avg7": 0.07, "avg30": 0.1, "reverseHoloAvg1": 0.25, "reverseHoloAvg7": 0.17, 
 
 ## 4. Cambi della Banca centrale europea
 
@@ -57,10 +58,10 @@ Eseguito: 2026-10-29 16:04 UTC, avvio: push
   - con tutte: S10P, S10a, S11, S11a, S12, S9, S9a, SV1S, SV1V, SV1a, SV2D, SV2P, SV2a, SV3, SV3a, SV4K, SV4M, SV4a, SV5K, SV5a, SV6, SV6a, SV7, SV7a, SV8a, SV9, SV9a, SVK, SVLN, SVLS
   - senza: CP1, CP2, E1, E2, E3, E4, E5, M-P, M1L, M1S, M2, M2a, M3, M4, M5, M6, MC, PCG1, PCG2, PCG3, PCG4, PCG5, PCG6, PCG7, PCG8, PCG9, PMCG1, PMCG2, PMCG3, PMCG4, PMCG5, PMCG6, S5I, S6H, S6K, S7D, S8, S8b, SM10, SM10a, SM10b, SM11, SM11a, SM11b, SM12, SM12a, SM1M, SM1S, SM1p, SM2K, SM2L, SM2p, SM3H, SM3N, SM3p, SM4A, SM4S, SM4p, SM5M, SM5S, SM5p, SM6, SM6a, SM6b, SM7, SM7a, SM7b, SM8, SM8a, SM8b, SM9, SM9a, SM9b, SV-P, SV11B, SV11W, SV5M, VS1, neo1, neo2
   - parziali: S12a (254/258), SV10 (98/132), SV8 (106/138)
-- carta giapponese **SV2a-210** (基本超エネルギー): immagine si, prodotto Cardmarket 719663, tendenza 14.61
-- carta giapponese **SV4a-360** (コライドンex): immagine si, prodotto Cardmarket 747714, tendenza 4.79
+- carta giapponese **SV2a-210** (基本超エネルギー): immagine si, prodotto Cardmarket 719663, tendenza 13.98
+- carta giapponese **SV4a-360** (コライドンex): immagine si, prodotto Cardmarket 747714, tendenza 4.93
 - carta giapponese **M2a-250** (メガカイリューex): immagine no, prodotto Cardmarket 861493, tendenza 139.48
-- carta giapponese **S12a-262** (アルセウスVSTAR): immagine si, prodotto Cardmarket 687824, tendenza 137.42
+- carta giapponese **S12a-262** (アルセウスVSTAR): immagine si, prodotto Cardmarket 687824, tendenza 151.23
 - carta giapponese **SM12a-226** (ファイヤー&サンダー&フリーザーGX): immagine no, prodotto Cardmarket 547221, tendenza 290.02
 
 ### Prodotti Cardmarket delle carte giapponesi
@@ -74,11 +75,11 @@ Eseguito: 2026-10-29 16:04 UTC, avvio: push
 
 ## 6. TCGCSV (dati TCGplayer scaricabili)
 
-- ultimo aggiornamento: 2026-10-28T20:06:05+0000
+- ultimo aggiornamento: 2026-10-29T20:06:01+0000
 - categoria 3: Pokemon
 - categoria 85: Pokemon Japan
   - set giapponesi su TCGplayer: 461, ultimi: Pokemon Card Fan Club; Pokemon Card Information Promotional cards; Unnumbered Promotional cards; Unnumbered World Championships; Vending Machine cards Series 1 (Blue); Vending Machine cards Series 2 (Red); Vending Machine cards Series 3 (Green); World Hobby Fair
-  - prezzi del set 24200: 3 righe, esempio `{"productId": 617299, "lowPrice": 124.99, "midPrice": 189.99, "highPrice": 255.73, "marketPrice": 243.55, "directLowPrice": null, "subTypeName": "Normal"}`
+  - prezzi del set 24200: 3 righe, esempio `{"productId": 617299, "lowPrice": 124.99, "midPrice": 189.99, "highPrice": 399.99, "marketPrice": 243.55, "directLowPrice": null, "subTypeName": "Normal"}`
 
 ## 7. Fonti di immagini per le carte giapponesi
 
