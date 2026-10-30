@@ -39,10 +39,27 @@ export interface Barra { testo: string; sotto?: string; pulsanti?: PulsanteBarra
 function paginaCollezione(CHIAVE: string) {
   const w = window as any
   if (!document.body) return
-  const suCardmarket = /(^|\.)cardmarket\.com$/.test(location.hostname)
-  const paginaCarta = suCardmarket && /\/Products\/Singles\//i.test(location.pathname)
-  if (!paginaCarta) return
   if (document.getElementById('collezione-barra')) return
+  // le pagine tradotte da Google stanno su <sito con i trattini>.translate.goog
+  const host = location.hostname
+  const tradotta = /\.translate\.goog$/.test(host)
+  const hostVero = tradotta ? host.replace(/\.translate\.goog$/, '').replace(/--/g, '\u0000').replace(/-/g, '.').replace(/\u0000/g, '-') : host
+  const suCardmarket = /(^|\.)cardmarket\.com$/.test(host)
+  const paginaCarta = suCardmarket && /\/Products\/Singles\//i.test(location.pathname)
+  const giapponese = tradotta || /(^|\.)(mercari\.com|yahoo\.co\.jp|pokecazilla\.com|snkrdunk\.com|suruga-ya\.jp|yuyu-tei\.jp|cardrush-pokemon\.jp|torecacamp-pokemon\.com)$/.test(hostVero) ||
+    /^ja\b/i.test(document.documentElement.lang || '')
+  // indirizzo della stessa pagina tradotta in italiano, o di nuovo l'originale
+  const traduzione = () => {
+    if (tradotta) {
+      const u = new URL(location.href)
+      ;['_x_tr_sl', '_x_tr_tl', '_x_tr_hl', '_x_tr_pto', '_x_tr_hist'].forEach((k) => u.searchParams.delete(k))
+      return 'https://' + hostVero + u.pathname + u.search + u.hash
+    }
+    const u = new URL(location.href)
+    u.hostname = host.replace(/-/g, '--').replace(/\./g, '-') + '.translate.goog'
+    u.searchParams.set('_x_tr_sl', 'auto'); u.searchParams.set('_x_tr_tl', 'it'); u.searchParams.set('_x_tr_hl', 'it')
+    return u.toString()
+  }
 
   const manda = (dati: any) => {
     if (!w.mobileApp) return false
@@ -80,11 +97,17 @@ function paginaCollezione(CHIAVE: string) {
     el.addEventListener('touchend', g, { passive: false })
     el.addEventListener('click', g)
   }
-  tocca(piccolo, () => {
-    ridotta = !ridotta
-    pulsanti.style.display = ridotta ? 'none' : 'flex'
-    piccolo.textContent = ridotta ? '+' : '–'
-  })
+  const riduci = (v: boolean) => {
+    ridotta = v
+    pulsanti.style.display = v ? 'none' : 'flex'
+    testo.style.display = v ? 'none' : 'block'
+    barra.style.left = v ? 'auto' : '8px'
+    barra.style.padding = v ? '6px' : '10px 12px'
+    piccolo.textContent = v ? '◂' : '–'
+    piccolo.setAttribute('aria-label', v ? 'Apri la barra' : 'Riduci')
+    setTimeout(() => { document.body.style.paddingBottom = (barra.offsetHeight + 24) + 'px' }, 0)
+  }
+  tocca(piccolo, () => riduci(!ridotta))
 
   const bottone = (etichetta: string, primario: boolean) => {
     const b = document.createElement('button')
@@ -113,6 +136,11 @@ function paginaCollezione(CHIAVE: string) {
       tocca(b, () => { b.textContent = '…'; manda({ tipo: 'scelta', azione: p.azione, prodotto: prodottoCorrente }) })
       pulsanti.appendChild(b)
     })
+    if (giapponese) {
+      const tr = bottone(tradotta ? 'Originale' : 'Traduci', false)
+      tocca(tr, () => { location.href = traduzione() })
+      pulsanti.appendChild(tr)
+    }
     const es = bottone('Esempio', false)
     es.style.marginLeft = 'auto'
     tocca(es, () => invia(es))
@@ -132,7 +160,7 @@ function paginaCollezione(CHIAVE: string) {
   const invia = (b: HTMLElement) => {
     const c = pulita()
     const t = (c.textContent || '').replace(/\s+/g, ' ')
-    if (t.length < 400 || t.indexOf('€') < 0) { b.textContent = 'Pagina non pronta'; return }
+    if (t.length < 400) { b.textContent = 'Pagina non pronta'; return }
     let html = c.innerHTML.replace(/\s+/g, ' ')
     if (html.length > 600000) html = html.slice(0, 600000)
     b.textContent = manda({ tipo: 'campione', url: location.href, titolo: document.title, html }) ? 'Invio…' : 'Non collegato'
@@ -240,6 +268,12 @@ function paginaCollezione(CHIAVE: string) {
   })
 
   document.body.appendChild(barra)
+  if (!paginaCarta) {
+    // siti senza lettore (per ora): barra ridotta con Traduci ed Esempio
+    mostra({ testo: giapponese ? 'Pagina giapponese: puoi tradurla in italiano.' : 'Il lettore per questa pagina non c\u2019è ancora.', sotto: 'Con Esempio salvi la pagina, così posso scriverlo.' })
+    riduci(true)
+    return
+  }
   mostra({ testo: 'Lettura della pagina…' })
   controlla()
   // offerte caricate dopo ("mostra altre") o collegamento con l'app arrivato in ritardo
