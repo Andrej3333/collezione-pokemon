@@ -36,6 +36,7 @@ export function AggiungiCarta() {
   // arrivo dalla pagina di un set: carta già scelta
   const cartaParam = params.get('carta')
   const linguaParam = params.get('lingua') as Lingua | null
+  const cmParam = params.get('cm')
   useEffect(() => {
     if (!cartaParam || !linguaParam) return
     void caricaCatalogo(linguaParam).then((cat) => {
@@ -92,7 +93,7 @@ export function AggiungiCarta() {
               carta_id: c.id, lingua, nome: c.nome, set_id: c.setId,
               set_nome: d.setNome ?? set?.nome ?? null, numero: c.numero,
               rarita: d.rarita, illustratore: d.illustratore, immagine: c.immagine || d.immagine,
-              cardmarket_id: d.cardmarketId, tcgplayer_id: d.tcgplayerId,
+              cardmarket_id: cmParam ? Number(cmParam) : d.cardmarketId, tcgplayer_id: d.tcgplayerId,
             }, quantita, collezioni)
             await ricarica()
             navigate(`/carta/${copia.id}`, { replace: true })
@@ -105,7 +106,7 @@ export function AggiungiCarta() {
     <main className="pagina">
       <Indietro to="/carte">Tutte le carte</Indietro>
       <h1>Aggiungi carta</h1>
-      <CercaCarta mostraSet onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
+      <CercaCarta mostraSet testoIniziale={params.get('q') ?? ''} onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
     </main>
   )
 }

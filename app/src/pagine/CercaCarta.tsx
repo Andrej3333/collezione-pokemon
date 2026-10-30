@@ -14,14 +14,15 @@ function linguaSalvata(): Scelta {
 
 // Ricerca nel catalogo: lingua (o tutte), testo, set trovati e carte con immagine.
 // Chi la usa decide cosa fare della carta scelta; con mostraSet i set si aprono in una pagina loro.
-export function CercaCarta({ onScelta, mostraSet }: {
+export function CercaCarta({ onScelta, mostraSet, testoIniziale }: {
   onScelta: (c: CartaCatalogo, lingua: Lingua, cat: Catalogo) => void
   mostraSet?: boolean
+  testoIniziale?: string
 }) {
   const [lingua, setLingua] = useState<Scelta>(linguaSalvata)
   const [cataloghi, setCataloghi] = useState<Catalogo[] | null>(null)
   const [erroreCat, setErroreCat] = useState<string | null>(null)
-  const [testo, setTesto] = useState('')
+  const [testo, setTesto] = useState(testoIniziale ?? '')
   const [ris, setRis] = useState<RisultatiRicerca>({ carte: [], set: [], altri: 0 })
 
   useEffect(() => {

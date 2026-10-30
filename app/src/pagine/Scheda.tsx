@@ -7,6 +7,7 @@ import { CONDIZIONI, LINGUE, oggiLocale } from '../tipi'
 import { breveLingua } from '../comuni'
 import { FormCopia, soloValori } from './FormCopia'
 import { ValoreCarta } from './Valore'
+import { LettureCardmarket } from './Letture'
 import { LinkSiti } from './Wantlist'
 
 function indirizzoBulbapedia(nome: string, setNome: string | null, numero: string): string {
@@ -158,6 +159,8 @@ export function Scheda() {
               </div>
             )}
           </section>}
+
+          <LettureCardmarket cm={c.cardmarket_id} carta={c} condizione={c.gradata ? null : c.condizione} />
 
           <section className="scheda">
             <h2>Valuta la tua copia sui siti</h2>

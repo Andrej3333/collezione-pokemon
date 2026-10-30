@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { InAppBrowser, ToolBarType } from '@capgo/capacitor-inappbrowser'
+import { scriptPagina, type Barra, type LetturaPagina } from './pagina'
 import { supabase } from './supabase'
 
 export interface Sito { nome: string; url: string }
@@ -46,74 +47,56 @@ export function indirizzoDa(testo: string): string {
 // privato la parte della pagina con i dati pubblici (senza intestazione, menu e account),
 // per scrivere o sistemare il lettore di quel sito.
 
-const SITI_DA_LEGGERE = /(^|\.)(cardmarket\.com)$/
 const CHIAVE = Math.random().toString(36).slice(2) + Date.now().toString(36)
 
-function iniettore(): string {
-  return `(function () {
-  if (!${SITI_DA_LEGGERE}.test(location.hostname) || !document.body) return;
-  if (!/\\/Products\\/Singles\\//i.test(location.pathname)) return; // solo pagine di una carta
-  if (document.querySelector('button[data-collezione]')) return;
-  var b = document.createElement('button');
-  b.setAttribute('data-collezione', '1');
-  b.textContent = 'Invia esempio';
-  b.style.cssText = 'position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom, 0px) + 96px);touch-action:manipulation;z-index:2147483647;padding:10px 16px;border-radius:20px;border:0;background:#3d63f2;color:#fff;font:600 14px sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.45)';
-  var invia = function (ev) {
-    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-    if (b.textContent === 'Invio…' || b.textContent === 'Salvataggio…') return;
-    if (!window.mobileApp) { b.textContent = 'Collegamento non pronto, riprova'; return; }
-    b.textContent = 'Invio…';
-    var c = document.body.cloneNode(true);
-    c.querySelectorAll('script,style,noscript,svg,iframe,link,meta,header,nav,footer,input,textarea,select,[data-collezione],[class*="account" i],[id*="account" i],[class*="login" i],[class*="cart" i],[id*="cart" i],[class*="cookie" i],[class*="navbar" i]').forEach(function (e) { e.remove(); });
-    var tieni = /^(class|id|href|title|alt|src|aria-label|colspan|data-[a-z0-9-]+)$/i;
-    c.querySelectorAll('*').forEach(function (e) { Array.prototype.slice.call(e.attributes).forEach(function (a) { if (!tieni.test(a.name)) e.removeAttribute(a.name); }); });
-    var testo = (c.textContent || '').replace(/\\s+/g, ' ');
-    if (testo.length < 400 || testo.indexOf('€') < 0) { b.textContent = 'Pagina non ancora caricata, riprova'; setTimeout(function () { b.textContent = 'Invia esempio'; }, 3000); return; }
-    var html = c.innerHTML.replace(/\\s+/g, ' ');
-    if (html.length > 600000) html = html.slice(0, 600000);
-    window.mobileApp.postMessage({ detail: { tipo: 'campione', chiave: '${CHIAVE}', url: location.href, titolo: document.title, html: html } });
-    clearTimeout(window.__collezioneAttesa);
-    window.__collezioneAttesa = setTimeout(function () {
-      if (b.textContent === 'Invio…') { b.textContent = 'Nessuna risposta dall\\u2019app, riprova'; setTimeout(function () { b.textContent = 'Invia esempio'; }, 4000); }
-    }, 20000);
-  };
-  b.addEventListener('touchend', invia, { passive: false });
-  b.addEventListener('click', invia);
-  if (window.__collezioneAscolto) { document.body.appendChild(b); return; }
-  window.__collezioneAscolto = true;
-  window.addEventListener('messageFromNative', function (e) {
-    var b = document.querySelector('button[data-collezione]'); if (!b) return;
-    var d = (e && e.detail) || {};
-    if (d.tipo === 'campione-ricevuto') { b.textContent = 'Salvataggio…'; return; }
-    if (d.tipo !== 'campione-salvato') return;
-    clearTimeout(window.__collezioneAttesa);
-    b.textContent = d.ok ? 'Salvato ✓ (in Impostazioni)' : 'Non salvato: ' + (d.errore || 'errore');
-    setTimeout(function () { b.textContent = 'Invia esempio'; }, 3500);
-  });
-  document.body.appendChild(b);
-})();`
+// Chi gestisce letture e scelte: lo registra l'app (GestoreLetture), che conosce collezione e wantlist.
+export type RispostaBarra = Barra | null
+export interface GestoreLetture {
+  lettura: (l: LetturaPagina) => Promise<RispostaBarra>
+  scelta: (azione: string, prodotto: number | null) => Promise<RispostaBarra>
+}
+let gestore: GestoreLetture | null = null
+export function impostaGestore(g: GestoreLetture | null) { gestore = g }
+
+async function aBarra(id: string | undefined, b: RispostaBarra) {
+  if (!b) return
+  await InAppBrowser.postMessage({ detail: { tipo: 'barra', ...b }, id }).catch(() => {})
+}
+
+export async function chiudiBrowser(): Promise<void> {
+  await InAppBrowser.close().catch(() => {})
 }
 
 let pronto = false
 async function preparaAscolto(): Promise<void> {
   if (pronto) return
   pronto = true
-  // la pagina appena caricata può ancora cambiare: riprovo dopo un attimo (il pulsante non si duplica)
+  // la pagina appena caricata può ancora cambiare: riprovo dopo un attimo (la barra non si duplica)
   await InAppBrowser.addListener('browserPageLoaded', (e) => {
     for (const attesa of [0, 1200, 3500]) {
-      setTimeout(() => { void InAppBrowser.executeScript({ code: iniettore(), id: e.id }).catch(() => {}) }, attesa)
+      setTimeout(() => { void InAppBrowser.executeScript({ code: scriptPagina(CHIAVE), id: e.id }).catch(() => {}) }, attesa)
     }
   })
   await InAppBrowser.addListener('messageFromWebview', (e) => {
     // Android mette i campi del messaggio direttamente nell'evento: li cerco sia lì sia in detail
-    type Messaggio = { tipo?: string; chiave?: string; url?: string; titolo?: string; html?: string }
+    type Messaggio = { tipo?: string; chiave?: string; url?: string; titolo?: string; html?: string; azione?: string; prodotto?: number | null }
     const grezzo = e as unknown as Messaggio & { detail?: Messaggio }
     const d = grezzo.detail ?? grezzo
-    if (!d || d.chiave !== CHIAVE || d.tipo !== 'campione' || !d.url || !d.html) return
+    if (!d || d.chiave !== CHIAVE) return
     void (async () => {
-      await InAppBrowser.postMessage({ detail: { tipo: 'campione-ricevuto' }, id: e.id }).catch(() => {})
-      const r = await supabase.from('campioni').insert({ url: d.url, titolo: d.titolo ?? null, html: d.html })
-      await InAppBrowser.postMessage({ detail: { tipo: 'campione-salvato', ok: !r.error, errore: r.error?.message }, id: e.id })
+      try {
+        if (d.tipo === 'campione' && d.url && d.html) {
+          await InAppBrowser.postMessage({ detail: { tipo: 'campione-ricevuto' }, id: e.id }).catch(() => {})
+          const r = await supabase.from('campioni').insert({ url: d.url, titolo: d.titolo ?? null, html: d.html })
+          await InAppBrowser.postMessage({ detail: { tipo: 'campione-salvato', ok: !r.error, errore: r.error?.message }, id: e.id })
+        } else if (d.tipo === 'lettura' && gestore) {
+          await aBarra(e.id, await gestore.lettura(d as unknown as LetturaPagina))
+        } else if (d.tipo === 'scelta' && gestore && d.azione) {
+          await aBarra(e.id, await gestore.scelta(d.azione, d.prodotto ?? null))
+        }
+      } catch (err) {
+        await aBarra(e.id, { testo: `Errore: ${(err as Error).message}`, colore: 'arancio' })
+      }
     })()
   })
 }

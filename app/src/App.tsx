@@ -18,6 +18,7 @@ import { NuovoOrdine, OrdineVista, Viaggio } from './pagine/Ordini'
 import { Tasse } from './pagine/Tasse'
 import { Vendute } from './pagine/Vendute'
 import { ElencoSet, SetVista } from './pagine/SetVista'
+import { GestoreLetture } from './pagine/GestoreLetture'
 
 export function App() {
   const [sessione, setSessione] = useState<Session | null | undefined>(undefined)
@@ -38,6 +39,7 @@ export function App() {
   return (
     <HashRouter>
       <ArchivioProvider>
+        <GestoreLetture />
         <Testata />
         <Routes>
           <Route path="/" element={<Collezioni />} />

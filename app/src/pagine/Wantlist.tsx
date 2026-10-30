@@ -11,6 +11,7 @@ import { CONDIZIONI } from '../tipi'
 import { CartaScelta, CercaCarta } from './CercaCarta'
 import { CampoVariante } from './FormCopia'
 import { PrezzoBreve, ValoreCarta } from './Valore'
+import { LettureCardmarket } from './Letture'
 import { valorePrincipale } from '../prezzi'
 
 export function requisiti(d: Desiderio): string {
@@ -146,7 +147,7 @@ export function NuovoDesiderio() {
     <main className="pagina">
       <Indietro to="/wantlist">Wantlist</Indietro>
       <h1>Aggiungi alla wantlist</h1>
-      <CercaCarta mostraSet onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
+      <CercaCarta mostraSet testoIniziale={params.get('q') ?? ''} onScelta={(c, lingua, cat) => setScelta({ c, lingua, cat })} />
     </main>
   )
 }
@@ -208,6 +209,8 @@ export function DesiderioVista() {
           <ValoreCarta cm={d.cardmarket_id} tp={d.tcgplayer_id} variante={d.variante} lingua={d.lingua} nome={d.nome} numero={d.numero} setId={d.set_id}
             prezzoMax={d.prezzo_max}
             onTcgplayer={async (tp) => { try { await aggiornaDesiderio(d.id, { tcgplayer_id: tp }); await ricarica() } catch (e) { setErrore((e as Error).message) } }} />
+
+          <LettureCardmarket cm={d.cardmarket_id} carta={d} desiderio={{ condizioneMin: d.condizione_min, prezzoMax: d.prezzo_max }} />
 
           <section className="scheda">
             <h2>Cerca sui siti</h2>
