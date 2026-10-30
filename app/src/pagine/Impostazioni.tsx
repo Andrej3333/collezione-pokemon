@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useArchivio } from '../archivio'
 import { eliminaPosizione, nuovaPosizione, rinominaPosizione } from '../dati'
 import { statoVoce } from '../importazione'
-import { appNativa, leggiSiti, salvaSiti, SITI_PREDEFINITI, URL_APK, type Sito } from '../browser'
+import { appNativa, elencoCampioni, eliminaCampione, leggiSiti, salvaSiti, scaricaCampione, SITI_PREDEFINITI, URL_APK, type Campione, type Sito } from '../browser'
 import { supabase } from '../supabase'
 
 export function Impostazioni() {
@@ -15,6 +15,9 @@ export function Impostazioni() {
   const [siti, setSiti] = useState<Sito[] | null>(null)
   const [sitiCambiati, setSitiCambiati] = useState(false)
   useEffect(() => { void leggiSiti().then(setSiti).catch(() => setSiti(SITI_PREDEFINITI)) }, [])
+  const [campioni, setCampioni] = useState<Campione[]>([])
+  const aggiornaCampioni = () => elencoCampioni().then(setCampioni).catch(() => setCampioni([]))
+  useEffect(() => { void aggiornaCampioni() }, [])
 
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ''))
@@ -90,6 +93,29 @@ export function Impostazioni() {
         </div>
         {sitiCambiati && <button type="button" className="btn primario" onClick={() => void esegui(async () => { await salvaSiti((siti ?? []).filter((s) => s.nome.trim() && s.url.trim())); setSitiCambiati(false) })}>Salva i siti</button>}
       </section>
+
+      {campioni.length > 0 && (
+        <section className="scheda">
+          <h2>Esempi di pagina</h2>
+          <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>
+            Le pagine salvate con "Invia esempio" nel browser interno. Restano private nel tuo database: per farmi scrivere o sistemare un lettore, scaricale dal PC e allegale in chat.
+          </span>
+          {campioni.map((c) => {
+            let host = c.url
+            try { host = new URL(c.url).hostname.replace(/^www\./, '') } catch { /* indirizzo non valido */ }
+            return (
+              <div key={c.id} className="riga" style={{ gap: 8, paddingTop: 8, borderTop: '1px solid var(--bordo)' }}>
+                <span className="colonna" style={{ flex: 1, gap: 2, minWidth: 0 }}>
+                  <span className="taglia" style={{ fontWeight: 600 }}>{c.titolo || host}</span>
+                  <span className="tenue piccolo taglia">{host} · {new Date(c.creato).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                </span>
+                <button type="button" className="btn" style={{ flex: 'none' }} onClick={() => void esegui(() => scaricaCampione(c))}>Scarica</button>
+                <button type="button" className="btn icona pericolo" aria-label="Elimina l'esempio" onClick={() => void esegui(async () => { await eliminaCampione(c.id); await aggiornaCampioni() })}>✕</button>
+              </div>
+            )
+          })}
+        </section>
+      )}
 
       <section className="scheda">
         <h2>App Android</h2>
