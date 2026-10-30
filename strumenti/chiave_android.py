@@ -44,7 +44,7 @@ def main():
         sys.exit(1)
     destinazione = sys.argv[1]
     seme = hashlib.pbkdf2_hmac("sha256", segreto.encode(), b"collezione-pokemon-android", 300_000, 64)
-    password = hashlib.sha256(seme + b"password").hexdigest()[:32]
+    password = hashlib.sha256(seme + b"password-file-v2").hexdigest()[:32]
 
     chiave_rsa = RSA.generate(2048, randfunc=flusso(seme))
     chiave = serialization.load_der_private_key(chiave_rsa.export_key(format="DER"), password=None)

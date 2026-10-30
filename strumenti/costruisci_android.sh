@@ -11,7 +11,6 @@ fi
 pip install -q pycryptodome cryptography
 CHIAVE_FILE="$RUNNER_TEMP/chiave.p12"
 CHIAVE_PASSWORD=$(python strumenti/chiave_android.py "$CHIAVE_FILE" 2> "$RUNNER_TEMP/impronta.txt")
-echo "::add-mask::$CHIAVE_PASSWORD"
 export CHIAVE_FILE CHIAVE_PASSWORD
 
 cd app

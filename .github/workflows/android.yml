@@ -68,7 +68,7 @@ jobs:
               costruito) echo "- APK costruito e pubblicato: https://github.com/${{ github.repository }}/releases/latest/download/collezione-pokemon.apk"
                          echo "- $(cat "$RUNNER_TEMP/impronta.txt" 2>/dev/null)" ;;
               senza_segreto) echo "- non costruito: manca il segreto ANDROID_FIRMA" ;;
-              *) echo "- **errore**, ultime righe:"; echo; echo '```'; tail -n 60 "$RUNNER_TEMP/log.txt" 2>/dev/null; echo '```' ;;
+              *) echo "- **errore**, ultime righe:"; echo; echo '```'; grep -v "add-mask" "$RUNNER_TEMP/log.txt" 2>/dev/null | tail -n 60; echo '```' ;;
             esac
           } > verifiche/android.md
           git config user.name "app-android"
