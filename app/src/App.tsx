@@ -8,7 +8,8 @@ import { Accesso } from './pagine/Accesso'
 import { AggiungiCarta } from './pagine/AggiungiCarta'
 import { CollezioneVista } from './pagine/CollezioneVista'
 import { Collezioni } from './pagine/Collezioni'
-import { Impostazioni, InArrivo } from './pagine/Impostazioni'
+import { Impostazioni } from './pagine/Impostazioni'
+import { Browser } from './pagine/Browser'
 import { NuovaCollezione } from './pagine/NuovaCollezione'
 import { Scheda } from './pagine/Scheda'
 import { TutteLeCarte } from './pagine/TutteLeCarte'
@@ -56,7 +57,7 @@ export function App() {
           <Route path="/viaggio" element={<Viaggio />} />
           <Route path="/ordine/nuovo" element={<NuovoOrdine />} />
           <Route path="/ordine/:id" element={<OrdineVista />} />
-          <Route path="/browser" element={<InArrivo titolo="Browser" testo="Il browser interno arriva con la tappa 4, nelle app per Android e Windows." />} />
+          <Route path="/browser" element={<Browser />} />
           <Route path="*" element={<Collezioni />} />
         </Routes>
         <Menu />

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useArchivio } from '../archivio'
 import { eliminaPosizione, nuovaPosizione, rinominaPosizione } from '../dati'
 import { statoVoce } from '../importazione'
+import { appNativa, leggiSiti, salvaSiti, SITI_PREDEFINITI, URL_APK, type Sito } from '../browser'
 import { supabase } from '../supabase'
 
 export function Impostazioni() {
@@ -11,6 +12,9 @@ export function Impostazioni() {
   const [nuova, setNuova] = useState('')
   const [errore, setErrore] = useState<string | null>(null)
   const [catalogo, setCatalogo] = useState<string>('')
+  const [siti, setSiti] = useState<Sito[] | null>(null)
+  const [sitiCambiati, setSitiCambiati] = useState(false)
+  useEffect(() => { void leggiSiti().then(setSiti).catch(() => setSiti(SITI_PREDEFINITI)) }, [])
 
   useEffect(() => {
     void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ''))
@@ -69,12 +73,39 @@ export function Impostazioni() {
       </section>
 
       <section className="scheda">
+        <h2>Siti del browser</h2>
+        <span className="tenue piccolo">L'elenco che trovi nella scheda Browser, uguale su tutti i dispositivi.</span>
+        {siti?.map((s, i) => (
+          <div key={i} className="colonna" style={{ gap: 6, paddingTop: 8, borderTop: '1px solid var(--bordo)' }}>
+            <div className="riga" style={{ gap: 8 }}>
+              <input className="campo-libero" value={s.nome} aria-label="Nome del sito" onChange={(e) => { setSiti(siti.map((x, j) => (j === i ? { ...x, nome: e.target.value } : x))); setSitiCambiati(true) }} />
+              <button type="button" className="btn icona pericolo" aria-label={`Togli ${s.nome}`} onClick={() => { setSiti(siti.filter((_, j) => j !== i)); setSitiCambiati(true) }}>✕</button>
+            </div>
+            <input className="campo-libero" value={s.url} inputMode="url" aria-label="Indirizzo del sito" onChange={(e) => { setSiti(siti.map((x, j) => (j === i ? { ...x, url: e.target.value } : x))); setSitiCambiati(true) }} />
+          </div>
+        ))}
+        <div className="griglia-campi">
+          <button type="button" className="btn" onClick={() => { setSiti([...(siti ?? []), { nome: 'Nuovo sito', url: 'https://' }]); setSitiCambiati(true) }}>+ Aggiungi un sito</button>
+          <button type="button" className="btn" onClick={() => { setSiti(SITI_PREDEFINITI); setSitiCambiati(true) }}>Elenco predefinito</button>
+        </div>
+        {sitiCambiati && <button type="button" className="btn primario" onClick={() => void esegui(async () => { await salvaSiti((siti ?? []).filter((s) => s.nome.trim() && s.url.trim())); setSitiCambiati(false) })}>Salva i siti</button>}
+      </section>
+
+      <section className="scheda">
+        <h2>App Android</h2>
+        {appNativa()
+          ? <span className="tenue piccolo">Stai usando l'app Android. Se ti avviso di una nuova versione, scaricala da qui e aprila per aggiornare.</span>
+          : <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>Scaricala dal telefono e aprila per installarla. La prima volta Android ti chiede di consentire l'installazione da Chrome o dall'app File.</span>}
+        <a className="btn" href={URL_APK}>Scarica l'app Android</a>
+      </section>
+
+      <section className="scheda">
         <h2>Account</h2>
         <span className="tenue">{email}</span>
         <button type="button" className="btn" onClick={() => void supabase.auth.signOut()}>Esci</button>
       </section>
 
-      <span className="tenue piccolo">Versione 0.3, tappa 3. In arrivo: app per Android e Windows con il browser interno.</span>
+      <span className="tenue piccolo">Versione 0.4, tappa 4. In arrivo: i lettori del browser interno e l'app Windows.</span>
     </main>
   )
 }

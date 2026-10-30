@@ -1,0 +1,78 @@
+name: App Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/android/**"
+      - "app/capacitor.config.ts"
+      - "app/package.json"
+      - "strumenti/chiave_android.py"
+      - "strumenti/costruisci_android.sh"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Costruisci l'APK
+        id: costruisci
+        env:
+          ANDROID_FIRMA: ${{ secrets.ANDROID_FIRMA }}
+          VERSIONE_CODICE: ${{ github.run_number }}
+          VERSIONE_NOME: "1.${{ github.run_number }}"
+        run: |
+          set -o pipefail
+          bash strumenti/costruisci_android.sh 2>&1 | tee "$RUNNER_TEMP/log.txt"
+      - name: Pubblica nella pagina Releases
+        if: steps.costruisci.outputs.esito == 'costruito'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-1.${{ github.run_number }}" "${{ steps.costruisci.outputs.apk }}" \
+            --title "App Android 1.${{ github.run_number }}" \
+            --notes "Scarica collezione-pokemon.apk dal telefono e aprilo per installare o aggiornare l'app." \
+            --latest
+      - name: Resoconto
+        if: always()
+        run: |
+          mkdir -p verifiche
+          {
+            echo "# App Android"
+            echo
+            echo "Eseguito: $(date -u '+%Y-%m-%d %H:%M') UTC, versione 1.${{ github.run_number }}"
+            echo
+            case "${{ steps.costruisci.outputs.esito }}" in
+              costruito) echo "- APK costruito e pubblicato: https://github.com/${{ github.repository }}/releases/latest/download/collezione-pokemon.apk"
+                         echo "- $(cat "$RUNNER_TEMP/impronta.txt" 2>/dev/null)" ;;
+              senza_segreto) echo "- non costruito: manca il segreto ANDROID_FIRMA" ;;
+              *) echo "- **errore**, ultime righe:"; echo; echo '```'; tail -n 60 "$RUNNER_TEMP/log.txt" 2>/dev/null; echo '```' ;;
+            esac
+          } > verifiche/android.md
+          git config user.name "app-android"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add verifiche/android.md
+          git commit -m "Resoconto app Android" || echo "nessuna modifica"
+          git pull --rebase origin main && git push origin HEAD:main || echo "resoconto non salvato"
