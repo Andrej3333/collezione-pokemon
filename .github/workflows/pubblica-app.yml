@@ -13,7 +13,7 @@ on:
     - cron: "23 4 * * 1"
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -32,6 +32,13 @@ jobs:
           python-version: "3.12"
       - name: Catalogo da TCGdex
         run: python strumenti/catalogo.py
+      - name: Salva il resoconto del catalogo
+        run: |
+          git config user.name "catalogo"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add verifiche/catalogo.md
+          git commit -m "Resoconto catalogo" || echo "nessuna modifica"
+          git pull --rebase origin main && git push origin HEAD:main || echo "resoconto non salvato"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
