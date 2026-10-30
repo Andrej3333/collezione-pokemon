@@ -294,6 +294,16 @@ export function ValoreCarta({ cm, tp, variante, lingua, nome, numero, setId, cos
         ) : <span className="tenue piccolo">{cm ? 'Nessun prezzo ancora salvato.' : 'Carta non ancora collegata a Cardmarket: si collega da sola con l\'aggiornamento notturno.'}</span>}
         {vcm && misto && <span className="piccolo" style={{ color: 'var(--arancio)' }}>Prezzo misto: Cardmarket non separa {variante === 'Shadowless' ? 'la Shadowless' : 'prima edizione e Unlimited'}. Il valore principale viene da TCGplayer, se collegato.</span>}
         {vcm && lingua !== 'ja' && <span className="tenue piccolo">Cardmarket ha un solo prezzo per inglese e italiano.</span>}
+        {(() => {
+          const tEuro = stp?.[1].market != null && prezzi.usd ? stp[1].market / prezzi.usd : null
+          const c = vcm?.trend ?? vcm?.avg30 ?? null
+          if (c == null || tEuro == null || misto) return null
+          const rapporto = Math.max(c, tEuro) / Math.max(0.01, Math.min(c, tEuro))
+          return rapporto >= 4
+            ? <span className="piccolo" style={{ color: 'var(--arancio)', lineHeight: 1.5 }}>Cardmarket e TCGplayer sono molto diversi ({euro(c)} contro {euro(tEuro)}): forse il prodotto Cardmarket collegato non è questa carta. Il lettore del browser interno permetterà di correggerlo.</span>
+            : null
+        })()}
+        {cm && <span className="tenue" style={{ fontSize: 12 }}>Prodotto Cardmarket n. {cm}</span>}
       </div>
 
       <div className="colonna" style={{ gap: 8, paddingTop: 10, borderTop: '1px solid var(--bordo)' }}>

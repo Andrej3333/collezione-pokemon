@@ -4,7 +4,8 @@ import { useArchivio } from '../archivio'
 import { caricaCatalogo, dettaglio, type Catalogo, type CartaCatalogo, type Dettaglio } from '../catalogo'
 import { Attesa, breveLingua, ImmagineCarta, Indietro } from '../comuni'
 import { aggiornaDesiderio, eliminaDesiderio, nuoviDesideri } from '../dati'
-import { linkRicerca } from '../ricerca'
+import { linkRicerca, siglaSet } from '../ricerca'
+import { apri, appNativa } from '../browser'
 import type { Desiderio, Lingua } from '../tipi'
 import { CONDIZIONI } from '../tipi'
 import { CartaScelta, CercaCarta } from './CercaCarta'
@@ -151,17 +152,19 @@ export function NuovoDesiderio() {
 }
 
 export function LinkSiti({ c }: { c: Parameters<typeof linkRicerca>[0] }) {
+  const [sigla, setSigla] = useState('')
+  useEffect(() => { void siglaSet(c.set_id, c.lingua).then(setSigla) }, [c.set_id, c.lingua])
   return (
     <div className="colonna" style={{ gap: 8 }}>
       <div className="griglia-campi">
-        {linkRicerca(c).map((l) => (
-          <a key={l.sito} className="btn" href={l.url} target="_blank" rel="noreferrer" style={{ flexDirection: 'column', gap: 0, padding: '6px 12px' }}>
+        {linkRicerca(c, sigla).map((l) => (
+          <button key={l.sito} type="button" className="btn" style={{ flexDirection: 'column', gap: 0, padding: '6px 12px' }} onClick={() => void apri(l.url, l.sito)}>
             <span>Cerca su {l.sito}</span>
             {l.nota && <span className="tenue" style={{ fontSize: 12 }}>{l.nota}</span>}
-          </a>
+          </button>
         ))}
       </div>
-      <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>Per ora la ricerca si apre nel browser normale. Con il browser interno (tappa 4) l'app leggerà da sola le offerte.</span>
+      <span className="tenue piccolo" style={{ lineHeight: 1.5 }}>{appNativa() ? 'Le ricerche si aprono nel browser interno.' : 'Le ricerche si aprono in una nuova scheda; nell\'app Android si aprono nel browser interno.'}</span>
     </div>
   )
 }
