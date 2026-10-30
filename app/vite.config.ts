@@ -5,4 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/collezione-pokemon/',
+  // data della costruzione, mostrata in Impostazioni per sapere quale versione è caricata
+  define: { __COSTRUITA__: JSON.stringify(new Date().toISOString()) },
 })

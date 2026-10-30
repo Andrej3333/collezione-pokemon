@@ -131,7 +131,7 @@ export function Impostazioni() {
         <button type="button" className="btn" onClick={() => void supabase.auth.signOut()}>Esci</button>
       </section>
 
-      <span className="tenue piccolo">Versione 0.4, tappa 4. In arrivo: i lettori del browser interno e l'app Windows.</span>
+      <span className="tenue piccolo">Versione 0.4, tappa 4, interfaccia del {new Date(__COSTRUITA__).toLocaleString('it-IT', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}{appNativa() ? ', app Android' : ''}. In arrivo: i lettori del browser interno e l'app Windows.</span>
     </main>
   )
 }

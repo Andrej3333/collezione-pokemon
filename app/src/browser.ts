@@ -51,13 +51,14 @@ const CHIAVE = Math.random().toString(36).slice(2) + Date.now().toString(36)
 
 function iniettore(): string {
   return `(function () {
-  if (window.__collezione) return; window.__collezione = true;
-  if (!${SITI_DA_LEGGERE}.test(location.hostname) || !window.mobileApp) return;
+  if (!${SITI_DA_LEGGERE}.test(location.hostname) || !document.body) return;
+  if (document.querySelector('button[data-collezione]')) return;
   var b = document.createElement('button');
   b.setAttribute('data-collezione', '1');
   b.textContent = 'Invia esempio';
   b.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:10px 16px;border-radius:20px;border:0;background:#3d63f2;color:#fff;font:600 14px sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.45)';
   b.onclick = function () {
+    if (!window.mobileApp) { b.textContent = 'Collegamento non pronto, riprova'; return; }
     b.textContent = 'Invio…';
     var c = document.body.cloneNode(true);
     c.querySelectorAll('script,style,noscript,svg,iframe,link,meta,header,nav,footer,input,textarea,select,[data-collezione],[class*="account" i],[id*="account" i],[class*="login" i],[class*="cart" i],[id*="cart" i],[class*="cookie" i],[class*="navbar" i]').forEach(function (e) { e.remove(); });
@@ -67,7 +68,10 @@ function iniettore(): string {
     if (html.length > 600000) html = html.slice(0, 600000);
     window.mobileApp.postMessage({ tipo: 'campione', chiave: '${CHIAVE}', url: location.href, titolo: document.title, html: html });
   };
+  if (window.__collezioneAscolto) { document.body.appendChild(b); return; }
+  window.__collezioneAscolto = true;
   window.addEventListener('messageFromNative', function (e) {
+    var b = document.querySelector('button[data-collezione]'); if (!b) return;
     var d = (e && e.detail) || {};
     if (d.tipo !== 'campione-salvato') return;
     b.textContent = d.ok ? 'Esempio salvato ✓' : 'Non salvato: ' + (d.errore || 'errore');
@@ -81,8 +85,11 @@ let pronto = false
 async function preparaAscolto(): Promise<void> {
   if (pronto) return
   pronto = true
+  // la pagina appena caricata può ancora cambiare: riprovo dopo un attimo (il pulsante non si duplica)
   await InAppBrowser.addListener('browserPageLoaded', (e) => {
-    void InAppBrowser.executeScript({ code: iniettore(), id: e.id }).catch(() => {})
+    for (const attesa of [0, 1200, 3500]) {
+      setTimeout(() => { void InAppBrowser.executeScript({ code: iniettore(), id: e.id }).catch(() => {}) }, attesa)
+    }
   })
   await InAppBrowser.addListener('messageFromWebview', (e) => {
     const d = e.detail as { tipo?: string; chiave?: string; url?: string; titolo?: string; html?: string } | undefined
