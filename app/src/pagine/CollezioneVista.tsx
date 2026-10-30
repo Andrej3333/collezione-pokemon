@@ -100,9 +100,10 @@ export function CollezioneVista() {
         <div className="griglia-carte fitta">
           {elenco.map((c) => {
             const m = perNumero.get(c.numero)
+            const quante = membri.filter((x) => x.numero === c.numero).length
             const contenuto = (
               <>
-                {m ? <ImmagineCopia copia={m} /> : <span className="mancante"><ImmagineCarta immagine={c.immagine} lingua={col.lingua!} setId={c.setId} numero={c.numero} alt={c.nome} /></span>}
+                {m ? <span className="con-numero"><ImmagineCopia copia={m} />{quante > 1 && <span className="quante" style={{ fontSize: 12, padding: '1px 6px' }}>×{quante}</span>}</span> : <span className="mancante"><ImmagineCarta immagine={c.immagine} lingua={col.lingua!} setId={c.setId} numero={c.numero} alt={c.nome} /></span>}
                 <span className={`piccolo taglia ${col.lingua === 'ja' ? 'jp' : ''}`} style={{ fontWeight: m ? 600 : 400 }}>{c.numero} · {c.nome}</span>
                 {m && <PrezzoBreve cm={m.cardmarket_id} tp={m.tcgplayer_id} variante={m.variante} />}
                 {m ? <span className="piccolo" style={{ color: 'var(--verde)' }}>Posseduta</span>

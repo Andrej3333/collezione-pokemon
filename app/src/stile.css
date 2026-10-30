@@ -87,6 +87,8 @@ h2 { margin: 0; font-size: 17px; font-weight: 600; }
 .lista-scelta button.attivo { border-color: var(--accento); background: var(--blu-f); }
 
 .voce { display: flex; align-items: center; gap: 14px; padding: 12px; background: var(--superficie); border: 1px solid var(--bordo); border-radius: 12px; color: var(--testo); min-width: 0; }
+.con-numero { position: relative; display: block; }
+.quante { position: absolute; top: 6px; right: 6px; background: var(--testo); color: var(--fondo); font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .mosaico { position: relative; flex: none; width: 80px; height: 80px; }
 .mosaico > * { position: absolute; width: 50px; }
 .barra { height: 6px; border-radius: 3px; background: var(--bordo); overflow: hidden; }

@@ -31,7 +31,7 @@ export function Menu() {
       <div>
         {VOCI.map((v) => (
           <NavLink key={v.to} to={v.to} end={v.to === '/'}
-            className={({ isActive }) => (isActive || (v.to === '/' && /^#\/(carte|carta|collezione|aggiungi|nuova)/.test(location.hash)) || (v.to === '/wantlist' && /^#\/desiderio/.test(location.hash)) || (v.to === '/viaggio' && /^#\/ordine/.test(location.hash)) ? 'attivo' : '')}>
+            className={({ isActive }) => (isActive || (v.to === '/' && /^#\/(carte|carta|collezione|aggiungi|nuova|vendute)/.test(location.hash)) || (v.to === '/wantlist' && /^#\/desiderio/.test(location.hash)) || (v.to === '/viaggio' && /^#\/ordine/.test(location.hash)) ? 'attivo' : '')}>
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">{v.icona}</svg>
             {v.nome}
           </NavLink>

@@ -54,6 +54,8 @@ export interface Copia {
   ordine_id: string | null
   quota_spese: number | null
   tcgplayer_id: number | null
+  prezzo_vendita: number | null
+  data_vendita: string | null
   created_at: string
 }
 

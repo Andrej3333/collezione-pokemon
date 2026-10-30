@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { copieDi, useArchivio } from '../archivio'
 import { Attesa, EtichettaStato, ImmagineCopia, Indietro } from '../comuni'
 import { aggiornaCopia, caricaFoto, collega, eliminaCopia, scollega } from '../dati'
-import { CONDIZIONI, LINGUE } from '../tipi'
+import { CONDIZIONI, LINGUE, oggiLocale } from '../tipi'
+import { breveLingua } from '../comuni'
 import { FormCopia, soloValori } from './FormCopia'
 import { ValoreCarta } from './Valore'
 import { LinkSiti } from './Wantlist'
@@ -21,6 +22,7 @@ export function Scheda() {
   const [grande, setGrande] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
   const [occupato, setOccupato] = useState(false)
+  const [vendita, setVendita] = useState<{ prezzo: string; data: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   useEffect(() => { setModifica(false) }, [id])
 
@@ -66,7 +68,7 @@ export function Scheda() {
 
   return (
     <main className="pagina">
-      <Indietro to="/carte">Tutte le carte</Indietro>
+      {c.stato === 'venduta' ? <Indietro to="/vendute">Vendute</Indietro> : <Indietro to="/carte">Tutte le carte</Indietro>}
       <div className="riga a-capo" style={{ alignItems: 'flex-start', gap: 24 }}>
         <div className="colonna" style={{ flex: '1 1 240px', maxWidth: 320, margin: '0 auto', gap: 10 }}>
           <ImmagineCopia copia={c} grande />
@@ -95,7 +97,11 @@ export function Scheda() {
             <button type="button" className="btn primario" onClick={() => setModifica(true)}>Modifica</button>
             <label className="campo" style={{ gap: 0 }}>
               <select aria-label="Cambia stato" value={c.stato} disabled={occupato}
-                onChange={(e) => void esegui(() => aggiornaCopia(c.id, { stato: e.target.value as typeof c.stato }))}>
+                onChange={(e) => {
+                  const s = e.target.value as typeof c.stato
+                  if (s === 'venduta') setVendita({ prezzo: '', data: oggiLocale() })
+                  else void esegui(() => aggiornaCopia(c.id, { stato: s }))
+                }}>
                 <option value="collezione">Stato: in collezione</option>
                 <option value="viaggio">Stato: in viaggio</option>
                 <option value="venduta">Stato: venduta</option>
@@ -103,7 +109,37 @@ export function Scheda() {
             </label>
           </div>
 
-          <section className="scheda">
+          <ValoreCarta cm={c.cardmarket_id} tp={c.tcgplayer_id} variante={c.variante} lingua={c.lingua} nome={c.nome} numero={c.numero} setId={c.set_id}
+            costo={c.prezzo_pagato != null ? Number(c.prezzo_pagato) + Number(c.quota_spese || 0) : null}
+            vendita={c.stato === 'venduta' ? { prezzo: c.prezzo_vendita != null ? Number(c.prezzo_vendita) : null, data: c.data_vendita } : null}
+            onTcgplayer={(tp) => esegui(() => aggiornaCopia(c.id, { tcgplayer_id: tp }))} />
+
+          {(() => {
+            const altre = copie.filter((x) => x.carta_id === c.carta_id && x.lingua === c.lingua)
+            return (
+              <section className="scheda">
+                <h2>Le tue copie di questa carta{altre.length > 1 ? ` (${altre.length})` : ''}</h2>
+                {altre.length > 1 && altre.map((x) => (
+                  <Link key={x.id} to={`/carta/${x.id}`} className="riga tra" style={{ gap: 10, color: 'var(--testo)', padding: '8px 10px', borderRadius: 8, border: `1px solid ${x.id === c.id ? 'var(--accento)' : 'var(--bordo)'}` }}>
+                    <span className="colonna" style={{ gap: 2, minWidth: 0 }}>
+                      <span className="taglia" style={{ fontWeight: x.id === c.id ? 600 : 400 }}>
+                        {[x.variante, x.gradata ? `${x.ente ?? ''} ${x.voto ?? ''}`.trim() || 'Gradata' : CONDIZIONI.find((k) => k.id === x.condizione)?.nome ?? x.condizione].filter(Boolean).join(' · ')}
+                      </span>
+                      <span className="tenue piccolo taglia">
+                        {x.stato === 'venduta' ? `venduta${x.prezzo_vendita != null ? ` a ${euro(Number(x.prezzo_vendita))}` : ''}` : x.stato === 'viaggio' ? 'in viaggio' : posizioni.find((p) => p.id === x.posizione_id)?.nome ?? 'senza posizione'}
+                        {x.prezzo_pagato != null ? ` · pagata ${euro(x.prezzo_pagato)}` : ''}
+                      </span>
+                    </span>
+                    {x.id === c.id ? <span className="etichetta blu">Questa</span> : <span className="tenue" aria-hidden="true">›</span>}
+                  </Link>
+                ))}
+                {altre.length === 1 && <span className="tenue piccolo">Hai una sola copia di questa carta ({breveLingua(c.lingua)}).</span>}
+                <Link className="btn contorno" to={`/aggiungi?da=${c.id}`}>Aggiungi un'altra copia</Link>
+              </section>
+            )
+          })()}
+
+          {c.stato !== 'venduta' && <section className="scheda">
             <h2>Nelle collezioni</h2>
             <div className="riga a-capo" style={{ gap: 8 }}>
               {contenitori.length === 0 && <span className="tenue piccolo">Non è ancora in nessuna collezione.</span>}
@@ -120,11 +156,7 @@ export function Scheda() {
                 ))}
               </div>
             )}
-          </section>
-
-          <ValoreCarta cm={c.cardmarket_id} tp={c.tcgplayer_id} variante={c.variante} lingua={c.lingua} nome={c.nome} numero={c.numero} setId={c.set_id}
-            costo={c.prezzo_pagato != null ? Number(c.prezzo_pagato) + Number(c.quota_spese || 0) : null}
-            onTcgplayer={(tp) => esegui(() => aggiornaCopia(c.id, { tcgplayer_id: tp }))} />
+          </section>}
 
           <section className="scheda">
             <h2>Valuta la tua copia sui siti</h2>
@@ -156,6 +188,33 @@ export function Scheda() {
           </button>
         </div>
       </div>
+
+      {vendita && (
+        <div className="foglio-sfondo" onClick={() => setVendita(null)}>
+          <form className="foglio" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Segna come venduta"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const v = vendita
+              setVendita(null)
+              void esegui(() => aggiornaCopia(c.id, { stato: 'venduta', prezzo_vendita: v.prezzo === '' ? null : Number(v.prezzo), data_vendita: v.data || null }))
+            }}>
+            <h2>Segna come venduta</h2>
+            <span className="tenue piccolo">La carta passa nella sezione Vendute e il suo prezzo continua a essere seguito.</span>
+            <div className="griglia-campi">
+              <label className="campo">Venduta a (€)
+                <input type="number" inputMode="decimal" step="0.01" min="0" autoFocus value={vendita.prezzo} onChange={(e) => setVendita({ ...vendita, prezzo: e.target.value })} />
+              </label>
+              <label className="campo">Venduta il
+                <input type="date" value={vendita.data} onChange={(e) => setVendita({ ...vendita, data: e.target.value })} />
+              </label>
+            </div>
+            <div className="griglia-campi">
+              <button type="button" className="btn" onClick={() => setVendita(null)}>Annulla</button>
+              <button type="submit" className="btn primario">Segna come venduta</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {grande && (
         <div className="foglio-sfondo" onClick={() => setGrande(false)} role="dialog" aria-label="Immagine ingrandita">

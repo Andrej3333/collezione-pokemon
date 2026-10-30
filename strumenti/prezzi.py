@@ -1,6 +1,6 @@
 """Aggiornamento notturno dei prezzi.
 
-Gira su GitHub Actions ogni notte. Per le carte in collezione, in viaggio e in wantlist:
+Gira su GitHub Actions ogni notte. Per le carte in collezione, in viaggio, vendute e in wantlist:
 1. completa i collegamenti mancanti ai prodotti Cardmarket e TCGplayer (da TCGdex e TCGCSV);
 2. scarica i prezzi del giorno da Cardmarket (file pubblici) e TCGplayer (tramite TCGCSV);
 3. scarica i cambi della BCE;
@@ -107,7 +107,7 @@ def sezione(nome: str):
 def carte_seguite(cur):
     return cur.execute("""
         select 'copie' as tab, id, carta_id, lingua, set_id, numero, nome, cardmarket_id, tcgplayer_id
-          from public.copie where stato <> 'venduta'
+          from public.copie
         union all
         select 'wantlist', id, carta_id, lingua, set_id, numero, nome, cardmarket_id, tcgplayer_id
           from public.wantlist
@@ -304,7 +304,7 @@ def main():
     with psycopg.connect(db, autocommit=True, prepare_threshold=None) as conn:
         cur = conn.cursor()
         carte = carte_seguite(cur)
-        scrivi(f"- carte seguite: {len(carte)} (collezione, in viaggio e wantlist)")
+        scrivi(f"- carte seguite: {len(carte)} (collezione, in viaggio, vendute e wantlist)")
         collega_da_tcgdex(cur, carte)
         aggiorna_elenco_tcgplayer(cur, forza=os.environ.get("FORZA_ELENCO") == "1")
         carte = carte_seguite(cur)

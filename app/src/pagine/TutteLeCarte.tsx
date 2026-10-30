@@ -6,21 +6,37 @@ import type { Copia, Lingua, Stato } from '../tipi'
 import { LINGUE } from '../tipi'
 import { PrezzoBreve } from './Valore'
 
+// Copie uguali (stessa carta, lingua, variante e stato) in un solo riquadro, con il numero di copie.
+export function raggruppa(copie: Copia[]): Copia[][] {
+  const gruppi = new Map<string, Copia[]>()
+  for (const c of copie) {
+    const k = `${c.carta_id}|${c.lingua}|${c.variante ?? ''}|${c.stato}`
+    gruppi.set(k, [...(gruppi.get(k) ?? []), c])
+  }
+  return Array.from(gruppi.values())
+}
+
 export function GrigliaCopie({ copie }: { copie: Copia[] }) {
   return (
     <div className="griglia-carte">
-      {copie.map((c) => (
-        <Link key={c.id} className="carta" to={`/carta/${c.id}`}>
-          <ImmagineCopia copia={c} />
-          <span className="colonna" style={{ gap: 2 }}>
-            <span className="nome taglia">{c.nome}</span>
-            <span className="tenue piccolo taglia">{c.set_nome || c.set_id}</span>
-            <span className="tenue piccolo taglia">{c.numero} · {breveLingua(c.lingua)} · {c.gradata ? `${c.ente ?? ''} ${c.voto ?? ''}`.trim() : c.condizione}</span>
-            <PrezzoBreve cm={c.cardmarket_id} tp={c.tcgplayer_id} variante={c.variante} />
-          </span>
-          <EtichettaStato stato={c.stato} />
-        </Link>
-      ))}
+      {raggruppa(copie).map((g) => {
+        const c = g[0]
+        return (
+          <Link key={c.id} className="carta" to={`/carta/${c.id}`}>
+            <span className="con-numero">
+              <ImmagineCopia copia={c} />
+              {g.length > 1 && <span className="quante" aria-label={`${g.length} copie`}>×{g.length}</span>}
+            </span>
+            <span className="colonna" style={{ gap: 2 }}>
+              <span className="nome taglia">{c.nome}</span>
+              <span className="tenue piccolo taglia">{c.set_nome || c.set_id}</span>
+              <span className="tenue piccolo taglia">{c.numero} · {breveLingua(c.lingua)} · {g.length > 1 ? `${g.length} copie` : c.gradata ? `${c.ente ?? ''} ${c.voto ?? ''}`.trim() : c.condizione}</span>
+              <PrezzoBreve cm={c.cardmarket_id} tp={c.tcgplayer_id} variante={c.variante} />
+            </span>
+            <EtichettaStato stato={c.stato} />
+          </Link>
+        )
+      })}
     </div>
   )
 }
@@ -59,7 +75,7 @@ export function TutteLeCarte() {
       <input className="campo-libero" type="search" placeholder="Cerca nome, numero o set" aria-label="Cerca carta"
         value={testo} onChange={(e) => setTesto(e.target.value)} />
       <div className="chips">
-        {([['', 'Tutte'], ['collezione', 'In collezione'], ['viaggio', 'In viaggio'], ['venduta', 'Vendute']] as [Stato | '', string][]).map(([id, nome]) => (
+        {([['', 'Tutte'], ['collezione', 'In collezione'], ['viaggio', 'In viaggio']] as [Stato | '', string][]).map(([id, nome]) => (
           <button key={id} type="button" className={`chip ${stato === id ? 'attivo' : ''}`} aria-pressed={stato === id} onClick={() => setStato(id)}>{nome}</button>
         ))}
       </div>

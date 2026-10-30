@@ -205,7 +205,7 @@ function useNomeProdotto(tp: number | null) {
 
 // --- Sezione "Valore della carta" ------------------------------------------------
 
-export function ValoreCarta({ cm, tp, variante, lingua, nome, numero, setId, costo, prezzoMax, onTcgplayer }: {
+export function ValoreCarta({ cm, tp, variante, lingua, nome, numero, setId, costo, vendita, prezzoMax, onTcgplayer }: {
   cm: number | null
   tp: number | null
   variante: string | null
@@ -214,6 +214,7 @@ export function ValoreCarta({ cm, tp, variante, lingua, nome, numero, setId, cos
   numero: string
   setId: string
   costo?: number | null // costo effettivo della tua copia
+  vendita?: { prezzo: number | null; data: string | null } | null // per le carte vendute
   prezzoMax?: number | null // prezzo massimo della wantlist
   onTcgplayer: (id: number | null) => Promise<void>
 }) {
@@ -246,7 +247,22 @@ export function ValoreCarta({ cm, tp, variante, lingua, nome, numero, setId, cos
         <div className="avviso">Ancora nessun prezzo per questa carta: arriva con il prossimo aggiornamento notturno, se la carta è collegata a Cardmarket o TCGplayer.</div>
       )}
 
-      {principale && costo != null && (() => {
+      {vendita && (
+        <div className="avviso" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span>Venduta{vendita.prezzo != null ? <> a <span className="mono">{euro(vendita.prezzo)}</span></> : ''}{vendita.data ? ` il ${new Date(vendita.data).toLocaleDateString('it-IT')}` : ''}</span>
+          {principale && vendita.prezzo != null && (() => {
+            const d = principale.euro - vendita.prezzo
+            return <span>Da allora: <span className="mono" style={{ fontWeight: 600 }}>{d >= 0 ? '+' : '−'}{euro(Math.abs(d))}{vendita.prezzo > 0 ? ` (${percento(d / vendita.prezzo)})` : ''}</span></span>
+          })()}
+          {costo != null && vendita.prezzo != null && (() => {
+            const g = vendita.prezzo - costo
+            return <span>Rispetto a quanto ti era costata ({euro(costo)}): <span className="mono" style={{ color: g >= 0 ? 'var(--verde)' : 'var(--rosso)', fontWeight: 600 }}>{g >= 0 ? '+' : '−'}{euro(Math.abs(g))}</span></span>
+          })()}
+          {vendita.prezzo == null && <span className="tenue piccolo">Prezzo di vendita non indicato: lo aggiungi da Modifica.</span>}
+        </div>
+      )}
+
+      {!vendita && principale && costo != null && (() => {
         const diff = principale.euro - costo
         return (
           <div className="avviso" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

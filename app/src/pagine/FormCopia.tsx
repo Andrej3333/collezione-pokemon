@@ -6,12 +6,12 @@ import { CONDIZIONI, STATI, VARIANTI, oggiLocale } from '../tipi'
 
 export type ValoriCopia = Pick<Copia,
   'stato' | 'condizione' | 'variante' | 'gradata' | 'ente' | 'voto' | 'certificato' | 'protezione' |
-  'posizione_id' | 'pagina' | 'prezzo_pagato' | 'data_arrivo' | 'note'>
+  'posizione_id' | 'pagina' | 'prezzo_pagato' | 'data_arrivo' | 'note' | 'prezzo_vendita' | 'data_vendita'>
 
 export const VALORI_INIZIALI: ValoriCopia = {
   stato: 'collezione', condizione: 'NM', variante: null, gradata: false, ente: null, voto: null, certificato: null,
   protezione: 'Doppia bustina e toploader', posizione_id: null, pagina: null, prezzo_pagato: null,
-  data_arrivo: oggiLocale(), note: null,
+  data_arrivo: oggiLocale(), note: null, prezzo_vendita: null, data_vendita: null,
 }
 
 export function soloValori(c: ValoriCopia): ValoriCopia {
@@ -26,13 +26,15 @@ export function FormCopia(props: {
   variantiSuggerite?: string[]
   collezioniIniziali: string[]
   etichettaSalva: string
-  onSalva: (v: ValoriCopia, collezioni: string[]) => Promise<void>
+  conQuantita?: boolean
+  onSalva: (v: ValoriCopia, collezioni: string[], quantita: number) => Promise<void>
 }) {
   const { collezioni, posizioni, ricarica } = useArchivio()
   const manuali = collezioni.filter((c) => c.tipo === 'manuale')
   const [v, setV] = useState<ValoriCopia>(props.iniziali)
   const [scelte, setScelte] = useState<string[]>(props.collezioniIniziali)
   const [nuovaPos, setNuovaPos] = useState('')
+  const [quantita, setQuantita] = useState(1)
   const [invio, setInvio] = useState(false)
   const [errore, setErrore] = useState<string | null>(null)
   const set = <K extends keyof ValoriCopia>(k: K, x: ValoriCopia[K]) => setV((p) => ({ ...p, [k]: x }))
@@ -48,7 +50,7 @@ export function FormCopia(props: {
         valori = { ...v, posizione_id: p.id }
         await ricarica()
       }
-      await props.onSalva(valori, scelte)
+      await props.onSalva(valori, scelte, props.conQuantita ? Math.max(1, Math.min(50, quantita || 1)) : 1)
     } catch (err) {
       setErrore((err as Error).message)
       setInvio(false)
@@ -69,6 +71,18 @@ export function FormCopia(props: {
           </select>
         </label>
       </div>
+
+      {v.stato === 'venduta' && (
+        <div className="griglia-campi">
+          <label className="campo">Venduta a (€)
+            <input type="number" inputMode="decimal" step="0.01" min="0" value={v.prezzo_vendita ?? ''}
+              onChange={(e) => set('prezzo_vendita', e.target.value === '' ? null : Number(e.target.value))} />
+          </label>
+          <label className="campo">Venduta il
+            <input type="date" value={v.data_vendita ?? ''} onChange={(e) => set('data_vendita', e.target.value || null)} />
+          </label>
+        </div>
+      )}
 
       <CampoVariante valore={v.variante} suggerite={props.variantiSuggerite ?? []} onCambia={(x) => set('variante', x)} />
 
@@ -124,8 +138,14 @@ export function FormCopia(props: {
       )}
 
       <label className="campo">Note<textarea value={v.note ?? ''} onChange={(e) => set('note', vuotoNull(e.target.value))} /></label>
+      {props.conQuantita && (
+        <label className="campo">Quantità
+          <input type="number" inputMode="numeric" min="1" max="50" step="1" value={quantita || ''} onChange={(e) => setQuantita(Number(e.target.value))} />
+          <span className="tenue piccolo">Con più di 1 crea copie separate con gli stessi dati: poi puoi modificarle una per una.</span>
+        </label>
+      )}
       {errore && <div className="avviso errore">{errore}</div>}
-      <button className="btn primario" type="submit" disabled={invio}>{invio ? 'Salvataggio…' : props.etichettaSalva}</button>
+      <button className="btn primario" type="submit" disabled={invio}>{invio ? 'Salvataggio…' : props.conQuantita && quantita > 1 ? `${props.etichettaSalva} (${quantita} copie)` : props.etichettaSalva}</button>
     </form>
   )
 }

@@ -30,7 +30,7 @@ export function ArchivioProvider({ children }: { children: ReactNode }) {
         elencoCopie(), elencoCollezioni(), elencoLegami(), elencoPosizioni(), elencoWantlist(), elencoOrdini(),
         elencoVoci().catch(() => [] as VoceImportazione[]), // senza regole l'app funziona lo stesso, senza stime
       ])
-      const seguite = [...copie.filter((c) => c.stato !== 'venduta'), ...wantlist]
+      const seguite = [...copie, ...wantlist]
       const prezzi = await caricaPrezzi(
         seguite.map((c) => c.cardmarket_id).filter((x): x is number => x != null),
         seguite.map((c) => c.tcgplayer_id).filter((x): x is number => x != null),

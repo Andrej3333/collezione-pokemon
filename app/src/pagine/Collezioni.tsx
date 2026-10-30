@@ -28,6 +28,7 @@ export function Collezioni() {
   if (!caricato) return <main className="pagina"><Attesa /></main>
   const inViaggio = copie.filter((c) => c.stato === 'viaggio').length
   const possedute = copie.filter((c) => c.stato !== 'venduta')
+  const vendute = copie.filter((c) => c.stato === 'venduta')
 
   return (
     <main className="pagina">
@@ -44,6 +45,11 @@ export function Collezioni() {
           <span className="tenue piccolo">{possedute.length} carte{inViaggio ? ` · ${inViaggio} in viaggio` : ''}</span>
         </span>
         <span className="tenue" aria-hidden="true">›</span>
+      </Link>
+
+      <Link className="voce" to="/vendute" style={{ justifyContent: 'space-between' }}>
+        <span>Vendute</span>
+        <span className="tenue piccolo">{conta(vendute.length)} ›</span>
       </Link>
 
       <h2>Le tue collezioni</h2>
