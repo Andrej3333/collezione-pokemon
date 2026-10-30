@@ -59,7 +59,7 @@ function iniettore(): string {
   b.style.cssText = 'position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom, 0px) + 96px);touch-action:manipulation;z-index:2147483647;padding:10px 16px;border-radius:20px;border:0;background:#3d63f2;color:#fff;font:600 14px sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.45)';
   var invia = function (ev) {
     if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-    if (b.textContent === 'Invio…') return;
+    if (b.textContent === 'Invio…' || b.textContent === 'Salvataggio…') return;
     if (!window.mobileApp) { b.textContent = 'Collegamento non pronto, riprova'; return; }
     b.textContent = 'Invio…';
     var c = document.body.cloneNode(true);
@@ -68,7 +68,11 @@ function iniettore(): string {
     c.querySelectorAll('*').forEach(function (e) { Array.prototype.slice.call(e.attributes).forEach(function (a) { if (!tieni.test(a.name)) e.removeAttribute(a.name); }); });
     var html = c.innerHTML.replace(/\\s+/g, ' ');
     if (html.length > 600000) html = html.slice(0, 600000);
-    window.mobileApp.postMessage({ tipo: 'campione', chiave: '${CHIAVE}', url: location.href, titolo: document.title, html: html });
+    window.mobileApp.postMessage({ detail: { tipo: 'campione', chiave: '${CHIAVE}', url: location.href, titolo: document.title, html: html } });
+    clearTimeout(window.__collezioneAttesa);
+    window.__collezioneAttesa = setTimeout(function () {
+      if (b.textContent === 'Invio…') { b.textContent = 'Nessuna risposta dall\\u2019app, riprova'; setTimeout(function () { b.textContent = 'Invia esempio'; }, 4000); }
+    }, 20000);
   };
   b.addEventListener('touchend', invia, { passive: false });
   b.addEventListener('click', invia);
@@ -77,7 +81,9 @@ function iniettore(): string {
   window.addEventListener('messageFromNative', function (e) {
     var b = document.querySelector('button[data-collezione]'); if (!b) return;
     var d = (e && e.detail) || {};
+    if (d.tipo === 'campione-ricevuto') { b.textContent = 'Salvataggio…'; return; }
     if (d.tipo !== 'campione-salvato') return;
+    clearTimeout(window.__collezioneAttesa);
     b.textContent = d.ok ? 'Esempio salvato ✓' : 'Non salvato: ' + (d.errore || 'errore');
     setTimeout(function () { b.textContent = 'Invia esempio'; }, 3500);
   });
@@ -96,9 +102,13 @@ async function preparaAscolto(): Promise<void> {
     }
   })
   await InAppBrowser.addListener('messageFromWebview', (e) => {
-    const d = e.detail as { tipo?: string; chiave?: string; url?: string; titolo?: string; html?: string } | undefined
+    // Android mette i campi del messaggio direttamente nell'evento: li cerco sia lì sia in detail
+    type Messaggio = { tipo?: string; chiave?: string; url?: string; titolo?: string; html?: string }
+    const grezzo = e as unknown as Messaggio & { detail?: Messaggio }
+    const d = grezzo.detail ?? grezzo
     if (!d || d.chiave !== CHIAVE || d.tipo !== 'campione' || !d.url || !d.html) return
     void (async () => {
+      await InAppBrowser.postMessage({ detail: { tipo: 'campione-ricevuto' }, id: e.id }).catch(() => {})
       const r = await supabase.from('campioni').insert({ url: d.url, titolo: d.titolo ?? null, html: d.html })
       await InAppBrowser.postMessage({ detail: { tipo: 'campione-salvato', ok: !r.error, errore: r.error?.message }, id: e.id })
     })()
