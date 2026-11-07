@@ -1,19 +1,20 @@
 # Aggiornamento prezzi
 
-Eseguito: 2026-11-06 11:26 UTC, avvio: schedule, data dei prezzi: 2026-11-06
+Eseguito: 2026-11-07 10:38 UTC, avvio: schedule, data dei prezzi: 2026-11-07
 
 - carte seguite: 2 (collezione, in viaggio, vendute e wantlist)
 - collegamenti da TCGdex: 1 carte da completare, 0 collegate a Cardmarket, 0 a TCGplayer
 - elenco TCGplayer: già aggiornato questa settimana
 - carte giapponesi da abbinare a TCGplayer: nessuna
-- Cardmarket: file del 2026-11-06T02:42:47+0100, 2 prezzi salvati su 2 prodotti
+- Cardmarket: file del 2026-11-07T02:45:48+0100, 2 prezzi salvati su 2 prodotti
 - TCGplayer: 1 set scaricati, 1 prezzi salvati su 1 prodotti
-- cambi BCE del 2026-11-05: 1 € = 1.1224 $ = 177.85 ¥
+- cambi BCE del 2026-11-06: 1 € = 1.1165 $ = 176.77 ¥
 
-Durata: 5 secondi. Esito: tutto a posto.
+Durata: 4 secondi. Esito: tutto a posto.
 
 ## Esecuzioni
 
+- 2026-11-07 10:39 UTC, avvio: schedule, esito: ok
 - 2026-11-06 11:26 UTC, avvio: schedule, esito: ok
 - 2026-11-05 11:28 UTC, avvio: schedule, esito: ok
 - 2026-11-04 11:29 UTC, avvio: schedule, esito: ok
