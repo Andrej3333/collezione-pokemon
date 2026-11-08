@@ -1,6 +1,6 @@
 # Aggiornamento prezzi
 
-Eseguito: 2026-11-07 10:38 UTC, avvio: schedule, data dei prezzi: 2026-11-07
+Eseguito: 2026-11-08 10:44 UTC, avvio: schedule, data dei prezzi: 2026-11-08
 
 - carte seguite: 2 (collezione, in viaggio, vendute e wantlist)
 - collegamenti da TCGdex: 1 carte da completare, 0 collegate a Cardmarket, 0 a TCGplayer
@@ -14,6 +14,7 @@ Durata: 4 secondi. Esito: tutto a posto.
 
 ## Esecuzioni
 
+- 2026-11-08 10:44 UTC, avvio: schedule, esito: ok
 - 2026-11-07 10:39 UTC, avvio: schedule, esito: ok
 - 2026-11-06 11:26 UTC, avvio: schedule, esito: ok
 - 2026-11-05 11:28 UTC, avvio: schedule, esito: ok
