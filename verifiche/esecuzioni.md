@@ -27,3 +27,4 @@ Una riga per ogni volta che la verifica gira.
 - 2026-11-19 14:26 UTC, avvio: schedule
 - 2026-11-20 14:00 UTC, avvio: schedule
 - 2026-11-21 13:27 UTC, avvio: schedule
+- 2026-11-22 13:20 UTC, avvio: schedule
