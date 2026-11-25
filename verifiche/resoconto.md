@@ -1,6 +1,6 @@
 # Resoconto verifica fonti
 
-Eseguito: 2026-11-24 15:52 UTC, avvio: schedule
+Eseguito: 2026-11-25 15:36 UTC, avvio: schedule
 
 ## 1. TCGdex (catalogo e immagini)
 
@@ -12,32 +12,32 @@ Eseguito: 2026-11-24 15:52 UTC, avvio: schedule
 
 - carta **swsh3-136** (Furret): campi = category, id, illustrator, image, localId, name, rarity, set, variants, variants_detailed, dexId, hp, types, evolveFrom, description, stage, attacks, weaknesses, retreat, regulationMark, legal, updated, pricing
   - `pricing` presente, sotto-campi: cardmarket, tcgplayer
-  - `pricing.cardmarket`: {"updated": "2026-11-23T22:16:19.425Z", "unit": "EUR", "idProduct": 483559, "avg": 0.08, "low": 0.02, "trend": 0.14, "avg1": 0.25, "avg7": 0.1, "avg30": 0.08, "avg-holo": 0.31, "low-holo": 0.08, "trend-holo": 0.31, "avg1-holo": 0.3, "avg7-holo": 0.36, "avg30-holo": 0.28}
-  - `pricing.tcgplayer`: {"unit": "USD", "updated": "2026-11-23T22:16:31.612Z", "normal": {"productId": 219333, "lowPrice": 0.02, "midPrice": 0.26, "highPrice": 25.27, "marketPrice": 0.26, "directLowPrice": null}, "reverse-holofoil": {"productId": 219333, "lowPrice": 0.17, "midPrice": 0.4, "highPrice": 19.66, "marketPrice": 0.4, "directLowPrice": 0.4}}
+  - `pricing.cardmarket`: {"updated": "2026-11-24T22:16:19.102Z", "unit": "EUR", "idProduct": 483559, "avg": 0.08, "low": 0.02, "trend": 0.14, "avg1": 0.25, "avg7": 0.1, "avg30": 0.08, "avg-holo": 0.31, "low-holo": 0.08, "trend-holo": 0.31, "avg1-holo": 0.3, "avg7-holo": 0.36, "avg30-holo": 0.28}
+  - `pricing.tcgplayer`: {"unit": "USD", "updated": "2026-11-24T22:16:31.106Z", "normal": {"productId": 219333, "lowPrice": 0.02, "midPrice": 0.26, "highPrice": 25.27, "marketPrice": 0.26, "directLowPrice": null}, "reverse-holofoil": {"productId": 219333, "lowPrice": 0.17, "midPrice": 0.4, "highPrice": 19.66, "marketPrice": 0.4, "directLowPrice": 0.4}}
 - carta **g1-RC32** (Sylveon EX): campi = category, id, illustrator, image, localId, name, rarity, set, variants, variants_detailed, dexId, cameoDexIds, hp, types, suffix, attacks, weaknesses, resistances, retreat, legal, updated, thirdParty, pricing
   - `pricing` presente, sotto-campi: cardmarket, tcgplayer
-  - `pricing.cardmarket`: {"updated": "2026-11-23T22:16:19.401Z", "unit": "EUR", "idProduct": 288530, "avg": 41.6, "low": 15, "trend": 50.55, "avg1": 90, "avg7": 46.64, "avg30": 42.45, "avg-holo": null, "low-holo": null, "trend-holo": 7.07, "avg1-holo": 3.99, "avg7-holo": 7.23, "avg30-holo": 7.12}
+  - `pricing.cardmarket`: {"updated": "2026-11-24T22:16:19.102Z", "unit": "EUR", "idProduct": 288530, "avg": 41.6, "low": 15, "trend": 47.99, "avg1": 32, "avg7": 43.38, "avg30": 42.65, "avg-holo": null, "low-holo": null, "trend-holo": 7.07, "avg1-holo": 3.99, "avg7-holo": 7.23, "avg30-holo": 7.12}
   - `pricing.tcgplayer`: null
 
 ## 2. Cardmarket (file pubblici)
 
 - **prezzi**: scaricato, 15.9 MB
   - campi principali: version, createdAt, priceGuides
-  - createdAt: 2026-11-24T02:45:23+0100
+  - createdAt: 2026-11-25T02:42:31+0100
   - version: 1
-  - `priceGuides`: 81080 elementi
+  - `priceGuides`: 81084 elementi
   - esempio di elemento: `{"idProduct": 271439, "idCategory": 52, "avg": 153.5, "low": 130, "trend": 199.31, "avg1": null, "avg7": null, "avg30": null, "avg-holo": null, "low-holo": null, "trend-holo": 3.93, "avg1-holo": null, "avg7-holo": null, "avg30-holo": null}`
 - **prodotti singole**: scaricato, 13.9 MB
   - campi principali: version, createdAt, products
-  - createdAt: 2026-11-24T13:07:30+0100
+  - createdAt: 2026-11-25T12:38:08+0100
   - version: 1
-  - `products`: 75913 elementi
+  - `products`: 75927 elementi
   - esempio di elemento: `{"idProduct": 273532, "name": "Weedle [Multiply]", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 1585, "idMetacard": 340471, "dateAdded": "0000-00-00 00:00:00"}`
-- **prodotti sigillati**: scaricato, 967 KB
+- **prodotti sigillati**: scaricato, 972 KB
   - campi principali: version, createdAt, products
-  - createdAt: 2026-11-24T13:07:33+0100
+  - createdAt: 2026-11-25T12:38:10+0100
   - version: 1
-  - `products`: 5169 elementi
+  - `products`: 5198 elementi
   - esempio di elemento: `{"idProduct": 271439, "name": "Phantom Forces Booster", "idCategory": 52, "categoryName": "Pokémon Booster", "idExpansion": 1521, "idMetacard": 0, "dateAdded": "2007-01-01 00:00:00"}`
 
 ## 3. pokemontcg.io (prezzi TCGplayer e Cardmarket)
@@ -46,9 +46,9 @@ Eseguito: 2026-11-24 15:52 UTC, avvio: schedule
 
 ## 4. Cambi della Banca centrale europea
 
-- JPY: currency='JPY' rate='174.39'/>
+- JPY: currency='JPY' rate='174.22'/>
 			<Cube 
-- USD: currency='USD' rate='1.0963'/>
+- USD: currency='USD' rate='1.0935'/>
 			<Cube 
 
 ## 5. Carte giapponesi: immagini e prodotti Cardmarket
@@ -59,22 +59,18 @@ Eseguito: 2026-11-24 15:52 UTC, avvio: schedule
   - parziali: S12a (254/258), SV10 (98/132), SV8 (106/138)
 - carta giapponese **SV2a-210** (基本超エネルギー): immagine si, prodotto Cardmarket 719663, tendenza 10.71
 - carta giapponese **SV4a-360** (コライドンex): immagine si, prodotto Cardmarket 747714, tendenza 5.17
-- carta giapponese **M2a-250** (メガカイリューex): immagine no, prodotto Cardmarket 861493, tendenza 130.56
-- carta giapponese **S12a-262** (アルセウスVSTAR): immagine si, prodotto Cardmarket 687824, tendenza 121.75
-- carta giapponese **SM12a-226** (ファイヤー&サンダー&フリーザーGX): immagine no, prodotto Cardmarket 547221, tendenza 275.33
+- carta M2a-250: non raggiungibile (HTTP Error 503: Service Unavailable)
+- carta S12a-262: non raggiungibile (HTTP Error 503: Service Unavailable)
+- carta SM12a-226: non raggiungibile (HTTP Error 503: Service Unavailable)
 
 ### Prodotti Cardmarket delle carte giapponesi
 
 - SV2a-210 -> prodotto 719663: {"idProduct": 719663, "name": "Basic Psychic Energy", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 5328, "idMetacard": 439732, "dateAdded": "2023-06-20 17:25:01"}
 - SV4a-360 -> prodotto 747714: {"idProduct": 747714, "name": "Koraidon ex [Dino Cry | Wild Impact]", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 5519, "idMetacard": 415183, "dateAdded": "2023-12-01 09:07:44"}
-- M2a-250 -> prodotto 861493: {"idProduct": 861493, "name": "Mega Dragonite ex [Sky Transport | Ryuno Glide]", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 6380, "idMetacard": 456956, "dateAdded": "2025-11-27 19:13:23"}
-- S12a-262 -> prodotto 687824: {"idProduct": 687824, "name": "Arceus VSTAR [Trinity Nova | Starbirth]", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 5198, "idMetacard": 401489, "dateAdded": "2022-12-02 00:51:01"}
-- SM12a-226 -> prodotto 547221: {"idProduct": 547221, "name": "Moltres & Zapdos & Articuno GX [Trinity Burn | Sky Legends GX]", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 3776, "idMetacard": 274473, "dateAdded": "2021-03-04 10:16:10"}
-- confronto: inglese sv03.5-199 (Charizard ex) -> prodotto 733794: {"idProduct": 733794, "name": "Charizard ex [Brave Wing | Explosive Vortex]", "idCategory": 51, "categoryName": "Pokémon Single", "idExpansion": 5402, "idMetacard": 421085, "dateAdded": "2023-09-22 05:57:24"}
 
 ## 6. TCGCSV (dati TCGplayer scaricabili)
 
-- ultimo aggiornamento: 2026-11-23T20:05:58+0000
+- ultimo aggiornamento: 2026-11-24T20:05:37+0000
 - categoria 3: Pokemon
 - categoria 85: Pokemon Japan
   - set giapponesi su TCGplayer: 463, ultimi: Pokemon Card Fan Club; Pokemon Card Information Promotional cards; Unnumbered Promotional cards; Unnumbered World Championships; Vending Machine cards Series 1 (Blue); Vending Machine cards Series 2 (Red); Vending Machine cards Series 3 (Green); World Hobby Fair
